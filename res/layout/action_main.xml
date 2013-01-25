@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ android:id="@+id/db_root"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" android:orientation="vertical">
+ 
+     <com.markupartist.android.widget.ActionBar
+        android:id="@+id/actionbar"
+          style="@style/ActionBar"
+        />
+    
+<LinearLayout
+     android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:padding="6dip"
+    >
+ <LinearLayout
+    android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical">
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+        <Button 
+         style="@style/AveRegina"
+         android:onClick="onClickFeature"
+        android:id="@+id/home_btn_feature1"
+        android:text="@string/title_feature1"
+        android:drawableTop="@drawable/home_button1"
+          />
+        <Button 
+         style="@style/AveRegina"
+          android:onClick="onClickFeature"
+        android:id="@+id/home_btn_feature4"
+            android:text="@string/title_feature4"
+            android:drawableTop="@drawable/home_button4"
+           />
+    </LinearLayout>
+  <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+        <Button 
+         style="@style/AveRegina"
+          android:onClick="onClickFeature"
+        android:id="@+id/home_btn_feature3"
+        android:text="@string/title_feature3"
+        android:drawableTop="@drawable/home_button3"
+          />
+        <Button 
+         style="@style/AveRegina"
+          android:onClick="onClickFeature"
+        android:id="@+id/home_btn_feature6"
+            android:text="@string/title_feature6"
+            android:drawableTop="@drawable/home_button6"
+           />
+    </LinearLayout>
+    
+    </LinearLayout>
+   </LinearLayout>
+   </LinearLayout>

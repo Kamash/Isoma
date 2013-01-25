@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+
+    <ImageView
+        android:id="@+id/bookCover"
+        android:layout_width="80dp"
+        android:layout_height="100dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="4dp"
+        android:contentDescription="@string/desc"
+        android:src="@drawable/page_turner">
+    </ImageView>
+    <LinearLayout android:id="@+id/linearLayout1" android:layout_height="fill_parent" android:orientation="vertical" android:layout_width="match_parent">
+        <TextView android:layout_height="wrap_content" android:text="@string/title" android:layout_width="fill_parent" android:textAppearance="?android:attr/textAppearanceMedium" android:id="@+id/bookTitle" android:textSize="18sp"></TextView>
+        <TextView android:layout_height="wrap_content" android:text="@string/by_who" android:layout_width="fill_parent" android:id="@+id/bookAuthor" android:textSize="14sp"></TextView>
+        <TextView android:layout_height="wrap_content" android:text="@string/never_read" android:layout_width="fill_parent" android:id="@+id/addedToLibrary" android:textSize="12sp"></TextView>
+    </LinearLayout>
+
+</LinearLayout>

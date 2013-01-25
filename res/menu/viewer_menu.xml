@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item android:id="@+id/ReadBook"
+          android:icon="@drawable/ic_menu_edit"
+          android:title="Read" />
+    <item android:id="@+id/ViewerHelp"
+          android:icon="@drawable/ic_menu_help"
+          android:title="Help" />
+    <item android:id="@+id/ViewerExit"
+          android:icon="@drawable/ic_menu_exit"
+          android:title="Exit" >
+          <menu> 
+           <item android:id="@+id/ReadYes"
+          android:title="Yes" />
+          
+            <item android:id="@+id/ReadNo"
+          android:title="No" />
+            </menu>
+            </item>
+   
+</menu>

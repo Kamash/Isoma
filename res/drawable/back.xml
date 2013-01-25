@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- http://stackoverflow.com/questions/3496269/how-to-put-a-border-around-an-android-textview -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle" >
+   <solid android:color="#ffffff" />
+   <stroke android:width="2dip" android:color="#fcfcfc"/>
+</shape>

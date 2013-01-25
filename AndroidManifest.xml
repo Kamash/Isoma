@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="com.android.isoma" android:versionCode="1"
+	android:versionName="1.2">
+	<uses-sdk android:minSdkVersion="8" />
+	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
+	<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+	<application android:icon="@drawable/isoma" android:label="@string/app_name"
+		android:theme="@style/Theme.D1" android:name=".Isoma">
+
+
+		<activity android:name=".activity.ReadingActivity"
+			android:label="@string/app_name" android:theme="@android:style/Theme.NoTitleBar">
+
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+
+				<data android:scheme="http" android:host="*"
+					android:pathPattern=".*\\.epub" android:mimeType="application/epub+zip" />
+				<data android:scheme="https" android:host="*"
+					android:pathPattern=".*\\.epub" android:mimeType="application/epub+zip" />
+				<data android:scheme="content" android:host="*"
+					android:pathPattern=".*\\.epub" android:mimeType="application/epub+zip" />
+				<data android:scheme="file" android:host="*"
+					android:pathPattern=".*\\.epub" android:mimeType="application/epub+zip" />
+
+			</intent-filter>
+		</activity>
+		
+		<activity android:name=".SplashScreen" android:theme="@style/Theme.D1"
+			android:label="@string/app_name">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".IsomaActionActivity" android:theme="@style/Theme.D1"
+			android:label="@string/app_name">
+		</activity>
+
+		<activity android:name=".ReadActivity" android:label="@string/app_name"
+			android:theme="@android:style/Theme.NoTitleBar">
+			<intent-filter>
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".EpubActivity" android:label="@string/app_name"
+			android:theme="@android:style/Theme.NoTitleBar">
+			<intent-filter>
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".ImageAdapter" android:label="@string/app_name"
+			android:theme="@android:style/Theme.NoTitleBar">
+			<intent-filter>
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".HomeActivity" android:label="@string/app_name"
+			android:theme="@android:style/Theme.NoTitleBar">
+			<intent-filter>
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".EpubSite" android:label="@string/app_name"
+			android:theme="@android:style/Theme.NoTitleBar">
+		</activity>
+
+		<activity android:name=".activity.PageTurnerPrefsActivity"
+			android:label="@string/prefs" android:theme="@android:style/Theme.Black" />
+			
+		<activity android:name=".activity.LibraryActivity"
+			android:label="@string/library">
+		</activity>
+
+		<activity android:name=".activity.BookDetailsActivity"
+			android:label="@string/book_details" />
+
+		<activity android:name=".activity.SearchDetailsActivity"
+			android:label="@string/book_details">
+			<meta-data android:name="android.app.searchable"
+				android:resource="@xml/searchable" android:launchMode="singleTop" />
+			<intent-filter>
+				<action android:name="android.intent.action.SEARCH" />
+			</intent-filter>
+
+		
+		</activity>
+
+		<activity android:name=".enc.ReaderActivity" android:label="@string/book_details" />
+	</application>
+
+
+</manifest>

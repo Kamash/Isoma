@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item android:id="@+id/bookshelf_menu"
+          android:icon="@drawable/ic_menu_library"
+          android:title="Book shelf" />
+    <item android:id="@+id/help"
+          android:icon="@drawable/ic_menu_toc"
+          android:title="Contents" />
+   
+       <item android:id="@+id/more_menu"
+          android:icon="@drawable/ic_menu_more"
+          android:title="More" >
+          <menu> 
+           <item android:id="@+id/bookmark_menu"
+          android:icon="@drawable/ic_menu_agenda"
+          android:title="Bookmark" />
+          
+            <item android:id="@+id/agenda_menu"
+          android:icon="@drawable/ic_menu_archive"
+          android:title="Browse" />
+          
+           <item android:id="@+id/night_menu"
+          android:icon="@drawable/ic_menu_night"
+          android:title="Night" />
+          
+            </menu>
+             </item>
+</menu>

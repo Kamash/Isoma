@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <LinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:layout_height="fill_parent" 
+    android:layout_width="fill_parent" 
+    android:id="@+id/linearLayout1" 
+    android:orientation="horizontal">
+        <WebView 
+       android:id="@+id/bookWeb" 
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent"
+		    android:layout_weight="1">
+        </WebView>
+        <TableLayout
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_weight="0"
+		    >
+		    <TableRow android:gravity="center">
+				<Button
+					android:id="@+id/btnWriteSDFile"
+				    android:layout_width="fill_parent"
+					android:text="Write SD File" 
+					android:enabled="false"
+					android:width="150px" android:gravity="center"/>
+				<Button
+					android:id="@+id/btnClearScreen"
+				    android:layout_width="fill_parent"
+					android:text="Clear Screen" 
+					android:enabled="false"
+				android:width="150px" android:gravity="center"/>
+			</TableRow>
+			<TableRow android:gravity="center">
+				<Button
+					android:id="@+id/btnReadSDFile"
+				    android:layout_width="fill_parent"
+					android:text="Read SDFile" 
+					android:enabled="false"
+					android:width="150px" android:gravity="center"/>
+				<Button
+					android:id="@+id/btnClose"
+				    android:layout_width="fill_parent"
+					android:text="Close" 
+					android:enabled="false"
+				android:width="150px" android:gravity="center"/>
+			</TableRow>
+			<TableRow>
+				<TextView
+					android:id="@+id/statusBar"
+					android:layout_width="100px"
+				    android:layout_height="wrap_content"
+				    android:typeface="monospace"
+				    android:inputType="none"
+				    android:textSize="20px"
+				    android:text="Page 1 of x"
+				    android:height="24px"
+				    android:gravity="bottom"
+				    android:layout_weight="0"
+				    android:textColor="#000000"
+				    android:visibility="invisible"
+				/>
+				<ProgressBar android:id="@+id/bookProgress" android:layout_width="fill_parent" android:layout_height="18px"></ProgressBar>
+			</TableRow>
+		</TableLayout>
+    </LinearLayout>

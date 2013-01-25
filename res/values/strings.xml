@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="hello">Hello World, TabbedListActivity!</string>
+	<string name="app_name">Isoma</string>
+	<string name="library_title">Library</string>
+	<string name="search_title">Search</string>
+	<string name="activate_isoma">Activate</string>
+	<string name="no_items">Nope. No items here!</string>
+	<string name="reader_hint">Your reader shoud display here</string>
+	<string name="popup_menu_search">Search</string>
+	<string name="error">There were errors that prevented the application
+		from loading</string>
+
+	<string name="action_bar_search">Search</string>
+	<!-- ============================== -->
+	<!-- app/menu examples strings -->
+	<!-- ============================== -->
+
+	<string name="last_most_often">Last most often</string>
+	<string name="middle_most_often">Middle most often</string>
+	<string name="first_most_often">First most often</string>
+	<string name="last_least_often">Last least often</string>
+	<string name="middle_least_often">Middle least often</string>
+	<string name="first_least_often">First least often</string>
+	<string name="browser_visibility">Browser visibility</string>
+	<string name="browser_refresh">Refresh</string>
+	<string name="browser_bookmark">Bookmark</string>
+	<string name="email_visibility">Email visibility</string>
+	<string name="email_reply">Reply</string>
+	<string name="email_forward">Forward</string>
+	<string name="jump">Jump</string>
+	<string name="dive">Dive</string>
+	<string name="menu_from_xml_instructions_press_menu">Select a menu resource and press the menu key.
+	</string>
+	<string name="menu_from_xml_instructions_go_back">If you want to choose another menu resource, go
+		back and re-run this activity.</string>
+		
+		<!-- ============================== -->
+	<!-- Dashboard strings -->
+	<!-- ============================== -->
+		
+		<string name="title_about">About</string>
+    <string name="title_home">Home</string>
+    <string name="title_search">Search</string>
+    <string name="title_feature1">Library</string>
+    <string name="title_feature3">Ilib download</string>
+    <string name="title_feature4">Settings</string>
+    <string name="title_feature6">Help</string>
+		
+		
+
+	<!-- ============================== -->
+	<!-- pageturner strings -->
+	<!-- ============================== -->
+
+	<string name="title">Title</string>
+    <string name="app_desc">Isoma is a syncing e-book reader that allows you to sync your reading progress over multiple devices.</string>
+    <string name="browse">Browse&#8230;</string>
+    <string name="open_file">Open ePub file</string>
+    <string name="open_library">My Books</string>
+    <string name="choose_book">Please choose a file to open</string>
+    <string name="pref_key">Isoma State</string>    
+    <string name="night_mode">Night mode</string>
+    <string name="full_screen">Full screen</string>
+    <string name="settings">Reading settings</string>
+    <string name="textSize">Text size</string>  
+    <string name="enable_scroll">Enable scrolling</string>  
+    <string name="email_header">E-mail address (for sync)</string>    
+    <string name="profile_day">Switch to day mode</string>  
+    <string name="profile_night">Switch to night mode</string>
+    <string name="manual_sync">Sync reading progress</string>
+    <string name="prefs">Settings</string>
+    <string name="quick_guide">Quick guide</string>
+    <string name="help">Isoma only reads EPUB files. Change pages by swiping horizontally or using the volume buttons. Please check the Preferences page.</string>
+    <string name="show_toc">Show TOC</string>   
+    <string name="rolling_blind">Auto-scroll</string>
+    <string name="about">About Isoma</string>
+    <string name="about_gpl">Isoma is free software under the GPL v3.</string>
+    <string name="error_open_bk">Error opening book: %s</string>
+    
+    <string name="dictionary_lookup">Look up in Dictionary</string>
+    <string name="wikipedia_lookup">Search on Wikipedia</string>
+    <string name="google_lookup">Search on Google</string>    
+    <string name="word_select">"You selected '%s'</string>    
+        
+    <string name="loading_wait">Loading, please wait</string>
+    <string name="install_oi">Please install OI File Manager from the Android Market.</string>    
+    
+    <string name="cloud_bm">Cloud bookmarks</string>
+    <string name="toc_label">Table of contents</string>
+    <string name="syncing">"Syncing progress&#8230;"</string>
+    <string name="sync_failed">Sync failed</string>
+    <string name="connection_fail">Could not connect to the sync server.</string>    
+    
+    <string name="never_read">Never</string>
+        
+    <string name="library">Library</string>
+     <string name="library_quick">Library</string>
+    <string name="book_details">Book details</string>
+     <string name="search_details">Search details</string>
+    
+    <string name="book_by">By %s</string>
+    <string name="last_read">Last read: %s</string>
+    <string name="added_to_lib">Added to library: %s</string>
+    
+    <string name="view_details">View details</string>
+    <string name="delete">Delete from library</string>
+    <string name="scan_books">Scan for books</string>    
+    
+    <string name="desc">This is an image of the book</string>
+    <string name="importing_books">Importing books&#8230;</string>
+    <string name="scanning_epub">Scanning for EPUB files.</string>
+    <string name="importing">Importing %1$d of %2$d</string>
+    <string name="scan_folders">Scanning for EPUB files.\nFolders scanned: %d</string>
+    <string name="import_errors">Some files had errors while importing:</string>
+    <string name="no_books_found">No books found.</string>
+    <string name="no_bks_fnd_text">No books were found on your device.\nYou can download books at gutenberg.org or feedbooks.com</string>
+    <string name="loading_library">Loading library&#8230;</string>
+    <string name="scan_bks_question">There are no books in your library.\nWould you like to scan your device for books?</string>    
+    <string name="by_who">by John Doe</string>
+    <string name="more_options">Delete or open book</string>     
+
+
+	<string-array name="library_ordering">
+		<item>Most recently read</item>
+		<item>Most recently added</item>
+		<item>Title</item>
+	</string-array>
+
+	<string-array name="v_animLabels">
+		<item>Slide</item>
+		<item>None</item>
+	</string-array>
+
+	<string-array name="h_animLabels">
+		<item>Page flip</item>
+		<item>Slide</item>
+		<item>None</item>
+	</string-array>
+
+	<string-array name="orientationLabels">
+		<item>Don\'t lock orientation</item>
+		<item>Portrait</item>
+		<item>Landscape</item>
+	</string-array>
+
+	<string-array name="autoscrollLabels">
+		<item>Rolling blind</item>
+		<item>Page change timer</item>
+	</string-array>
+
+	<string-array name="libraryQueries">
+		<item>Most recently read books</item>
+		<item>Most recently added books</item>
+		<item>Unread books</item>
+		<item>All books by title</item>
+		<item>All books by author</item>
+		<!-- <item>Monte Cristo</item> -->
+	</string-array>
+	<string name="search_hint">search book or author</string>
+	
+
+
+</resources>
