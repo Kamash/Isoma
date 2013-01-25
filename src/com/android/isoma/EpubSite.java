@@ -226,7 +226,7 @@ public class EpubSite extends Activity{
 	            // For "Title only": Examples of matching an ID with one assigned in
 	            //                   the XML
 	            case R.id.ViewerHelp:
-	                Toast.makeText(this, "Oops, it seems the file was not loaded!", Toast.LENGTH_SHORT).show();
+	                Toast.makeText(this, "Oops, file was not loaded!", Toast.LENGTH_SHORT).show();
 	                return true;
 	            case R.id.ReadYes:
 	            	Toast.makeText(this, "See you!", Toast.LENGTH_SHORT).show();
