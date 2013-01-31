@@ -78,6 +78,7 @@ import com.android.isoma.library.QueryResult;
 import com.android.isoma.library.QueryResultAdapter;
 import com.google.inject.Inject;
 import com.markupartist.android.widget.ActionBar;
+import com.markupartist.android.widget.ActionBar.AbstractAction;
 import com.markupartist.android.widget.ActionBar.Action;
 import com.markupartist.android.widget.ActionBar.IntentAction;
 
@@ -100,7 +101,6 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 	}	
 	
 	public BookAdapter bookAdapter;
-	//public static BookAdapter bookAdapteri;
 		
 	private static final DateFormat DATE_FORMAT = DateFormat.getDateInstance(DateFormat.LONG);
 	
@@ -125,7 +125,7 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
         actionBar.setTitle(R.string.library_title);
         actionBar.setHomeAction(new IntentAction(this, IsomaActionActivity.createIntent(this), R.drawable.ic_title_home_default));
         actionBar.setDisplayHomeAsUpEnabled(true);
-        //actionBar.addAction(new SearchBookList());
+        actionBar.addAction(new SearchBookList());
         final Action settingsAction = new IntentAction(this, new Intent(this, PageTurnerPrefsActivity.class), R.drawable.ic_menu_settingis);
         actionBar.addAction(settingsAction);
 		
@@ -158,14 +158,24 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 			//SearchRecentSuggestions
 	        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
 	               LibraryProvider.AUTHORITY, LibraryProvider.MODE);
-	        suggestions.saveRecentQuery(query, null);			
-			//showResults(query);
+	        suggestions.saveRecentQuery(query, null);		
 		}
 	  
 		
 	}
-	
+	private class SearchBookList extends AbstractAction {
 
+        public SearchBookList() {
+            super(R.drawable.action_search);
+        }
+
+        public void performAction(View view) {
+            /*Action to call open the search dialog*/
+        	onSearchRequested();
+        }
+    }
+	
+	
 	public void onItemClick(AdapterView<?> arg0, View arg1, int pos, long arg3) {
 		
 		LibraryBook book = this.bookAdapter.getResultAt(pos);
@@ -205,8 +215,7 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 				new LoadBooksTask().execute(lastSelection);
 				return true;					
 			}
-		});				
-		
+		});					
 	}	
 	
 	@Override
@@ -238,7 +247,6 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 				} catch (ActivityNotFoundException e) {
 					new ImportBooksTask().execute(new File("/sdcard"));  
 				}
-
 				return true;
 			}
 		});		
@@ -327,7 +335,6 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 			}
 			
 			TextView titleView = (TextView) rowView.findViewById(R.id.bookTitle);
-		
 		
 			TextView authorView = (TextView) rowView.findViewById(R.id.bookAuthor);
 			
@@ -561,9 +568,6 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 				return libraryService.findAllByTitle();
 			case BY_AUTHOR:
 				return libraryService.findAllByAuthor();
-			case FIND_MONTE:
-				String query = "art";
-				return libraryService.findMonte(query);
 			default:
 				return libraryService.findAllByLastRead();
 			}			

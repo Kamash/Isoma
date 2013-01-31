@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Alex Kuiper
+ * Copyright (C) 2013 @ilabAfrica
  * 
  * This file is part of Isoma
  *
@@ -19,6 +19,9 @@
 package com.android.isoma.activity;
 
 import java.text.DateFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import roboguice.activity.RoboActivity;
 import roboguice.inject.InjectResource;
 import roboguice.inject.InjectView;
@@ -33,6 +36,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.SearchRecentSuggestions;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -83,7 +87,7 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 	private ProgressDialog waitDialog;
 	private ProgressDialog importDialog;	
 	
-
+	private static final Logger LOG = LoggerFactory.getLogger(SearchDetailsActivity.class); 
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -105,23 +109,7 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 		this.listView.setAdapter(bookAdapter);
 		this.listView.setOnItemClickListener(this);
 		
-		//this.settings = PreferenceManager.getDefaultSharedPreferences(this); 
-		/*Cursor mCursor = (Cursor) libraryService.findMonte(); 
-		startManagingCursor(mCursor);
-		String[] from = new String[] { RecordsDbHelper.KEY_DATA };
-		
-		
-		ListAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, mCursor, null, null);
-		
-		// Bind to our new adapter.
-		setListAdapter(adapter);*/
-				
-		/*ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-		            this, R.array.libraryQueries, android.R.layout.simple_list_item_1);*/
-		
-		//spinner.setAdapter(adapter);
-		//spinner.setOnItemSelectedListener(new MenuSelectionListener());		
-						
+								
 		this.waitDialog = new ProgressDialog(this);
 		this.waitDialog.setOwnerActivity(this);
 		
@@ -129,6 +117,9 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 		this.importDialog.setOwnerActivity(this);
 		
 		registerForContextMenu(this.listView);
+		
+		/*Based on example here 
+		https://code.google.com/p/androidsearchexample/downloads/list*/	
 		
 		//Intent for the search
 	    Intent intent = getIntent();
@@ -140,24 +131,12 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 	        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
 	               LibraryProvider.AUTHORITY, LibraryProvider.MODE);
 	        suggestions.saveRecentQuery(query, null);			
-			//showSearchResults(query);
-	       //libraryService.findMonte(query);
-			new LoadBooksTask().execute(libraryService.findMonte(query));
+			//Start a query 
+	       libraryService.findMonte(query);
+			//Start task to display the books
+	       new LoadBooksTask().execute();
 		}
 	}
-	
-	
-
-	/*private void showSearchResults(String query) {
-		// TODO Auto-generated method stub
-		QueryResult<LibraryBook> cursor = libraryService.findMonte(query);
-		startManagingCursor(mCursor);
-		String[] from = new String[] { RecordsDbHelper.KEY_DATA };
-		
-		
-	}*/
-
-
 
 	private class SearchBookList extends AbstractAction {
 
@@ -229,43 +208,9 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 				return true;
 			}
 		});
-		
-	/*	MenuItem item = menu.add(R.string.scan_books);
-		item.setIcon( getResources().getDrawable(R.drawable.book_refresh) );
-		
-		item.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			
-			public boolean onMenuItemClick(MenuItem item) {
-				Intent intent = new Intent("org.openintents.action.PICK_DIRECTORY");
-
-				try {
-					startActivityForResult(intent, 1);
-				} catch (ActivityNotFoundException e) {
-					new ImportBooksTask().execute(new File("/sdcard"));  
-				}
-
-				return true;
-			}
-		});	*/	
-		
+	
 		return true;
 	}	
-	
-	/*@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-
-    	if ( resultCode == RESULT_OK && data != null) {
-    		// obtain the filename
-    		Uri fileUri = data.getData();
-    		if (fileUri != null) {
-    			String filePath = fileUri.getPath();
-    			if (filePath != null) {
-    				new ImportBooksTask().execute(new File(filePath));    				
-    			}
-    		}
-    	}	
-	}	*/
 	
 	@Override
 	protected void onStop() {		
@@ -275,9 +220,18 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 		super.onStop();
 	}
 	
+	/**
+	 * The idea is to make it seamless for the user. Implementing finish will
+	 * or might cause the search dialog to appear multiple times.
+	 * This just takes you back to the library activity.
+	 * @author work
+	 *
+	 */
 	@Override
 	public void onBackPressed() {
-		finish();			
+		Intent intent = new Intent(this, LibraryActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP| Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent);
 	}	
 	
 	@Override
@@ -289,17 +243,6 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 		
 		super.onPause();
 	}
-	
-	/*@Override
-	protected void onResume() {
-		super.onResume();				
-		
-		if ( spinner.getSelectedItemPosition() != this.lastSelection.ordinal() ) {
-			spinner.setSelection(this.lastSelection.ordinal());
-		} else {
-			new LoadBooksTask().execute(this.lastSelection);
-		}
-	}*/
 	
 	/**
 	 * Based on example found here:
@@ -360,192 +303,7 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 			}			
 			return rowView;
 		}		
-	}	
-	/*private QueryResult<LibraryBook> showSearchResults(String query) {
-		// TODO Auto-generated method stub
-		
-		return libraryService.findMonte();	
-	}*/
-	
-	/*private class MenuSelectionListener implements OnItemSelectedListener {
-		public void onItemSelected(AdapterView<?> arg0, View arg1, int pos,
-				long arg3) {
-			
-			Selections newSelections = Selections.values()[pos];
-			
-			lastSelection = newSelections;
-			bookAdapter.clear();		
-						
-			new LoadBooksTask().execute(newSelections);
-		}
-		
-		//Quick Action code
-		
-		public void onNothingSelected(AdapterView<?> arg0) {
-						
-		}
-	}*/	
-	
-/*	private class ImportBooksTask extends AsyncTask<File, Integer, Void> implements OnCancelListener {	
-		
-		private List<String> errors = new ArrayList<String>();
-		
-		private static final int UPDATE_FOLDER = 1;
-		private static final int UPDATE_IMPORT = 2;
-		
-		private int foldersScanned = 0;
-		private int booksImported = 0;
-		
-		private boolean oldKeepScreenOn;
-		private boolean keepRunning;	
-		
-		@Override
-		protected void onPreExecute() {
-			importDialog.setTitle(R.string.importing_books);
-			importDialog.setMessage(getString(R.string.scanning_epub));
-			importDialog.setOnCancelListener(this);
-			importDialog.show();			
-			
-			this.keepRunning = true;
-			
-			this.oldKeepScreenOn = listView.getKeepScreenOn();
-			listView.setKeepScreenOn(true);
-		}		
-		
-		public void onCancel(DialogInterface dialog) {
-			LOG.debug("User aborted import.");
-			this.keepRunning = false;			
-		}
-		
-		@Override
-		protected Void doInBackground(File... params) {
-			File parent = params[0];
-			List<File> books = new ArrayList<File>();			
-			findEpubsInFolder(parent, books);
-			
-			int total = books.size();
-			int i = 0;			
-	        
-			while ( i < books.size() && keepRunning ) {
-				
-				File book = books.get(i);
-				
-				LOG.info("Importing: " + book.getAbsolutePath() );
-				try {
-					if ( ! libraryService.hasBook(book.getName() ) ) {
-						importBook( book.getAbsolutePath() );
-					}					
-				} catch (OutOfMemoryError oom ) {
-					errors.add(book.getName() + ": Out of memory.");
-					return null;
-				}
-				
-				i++;
-				publishProgress(UPDATE_IMPORT, i, total);
-				booksImported++;
-			}
-			
-			return null;
-		}
-		
-		private void findEpubsInFolder( File folder, List<File> items) {
-			
-			if ( folder == null || folder.getAbsolutePath().startsWith(LibraryService.BASE_LIB_PATH) ) {
-				return;
-			}			
-			
-			if ( ! keepRunning ) {
-				return;
-			}		
-			
-			if ( folder.isDirectory() && folder.listFiles() != null) {
-				
-				for (File child: folder.listFiles() ) {
-					findEpubsInFolder(child, items); 
-				}
-				
-				foldersScanned++;
-				publishProgress(UPDATE_FOLDER, foldersScanned);
-				
-			} else {
-				if ( folder.getName().endsWith(".epub") ) {
-					items.add(folder);
-				}
-			}
-		}
-		
-		private void importBook(String file) {
-			try {
-				// read epub file
-		        EpubReader epubReader = new EpubReader();
-		        				
-				Book importedBook = epubReader.readEpubLazy(file, "UTF-8", 
-						Arrays.asList(MediatypeService.mediatypes));								
-				
-				boolean copy = settings.getBoolean("copy_to_library", true);
-	        	libraryService.storeBook(file, importedBook, false, copy);	        		        	
-				
-			} catch (Exception io ) {
-				errors.add( file + ": " + io.getMessage() );
-				LOG.error("Error while reading book: " + file, io); 
-			}
-		}
-		
-		@Override
-		protected void onProgressUpdate(Integer... values) {
-			
-			if ( values[0] == UPDATE_IMPORT ) {
-				String importing = String.format(getString(R.string.importing), values[1], values[2]);
-				importDialog.setMessage(importing);
-			} else {
-				String message = String.format(getString(R.string.scan_folders), values[1]);
-				importDialog.setMessage(message);
-			}
-		}
-		
-		@Override
-		protected void onPostExecute(Void result) {
-			
-			importDialog.hide();			
-			
-			OnClickListener dismiss = new OnClickListener() {
-				
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.dismiss();						
-				}
-			};
-			
-			//If the user cancelled the import, don't bug him/her with alerts.
-			if ( (! errors.isEmpty()) && keepRunning ) {
-				AlertDialog.Builder builder = new AlertDialog.Builder(SearchDetailsActivity.this);
-				builder.setTitle(R.string.import_errors);
-				
-				builder.setItems( errors.toArray(new String[errors.size()]), null );				
-				
-				builder.setNeutralButton(android.R.string.ok, dismiss );
-				
-				builder.show();
-			}
-			
-			listView.setKeepScreenOn(oldKeepScreenOn);
-			
-			if ( booksImported > 0 ) {			
-				//Switch to the "recently added" view.
-				if ( spinner.getSelectedItemPosition() == Selections.LAST_ADDED.ordinal() ) {
-					new LoadBooksTask().execute(Selections.LAST_ADDED);
-				} else {
-					spinner.setSelection(Selections.LAST_ADDED.ordinal());
-				}
-			} else {
-				AlertDialog.Builder builder = new AlertDialog.Builder(SearchDetailsActivity.this);
-				builder.setTitle(R.string.no_books_found);
-				builder.setMessage( getString(R.string.no_bks_fnd_text) );
-				builder.setNeutralButton(android.R.string.ok, dismiss);
-				
-				builder.show();
-			}
-		}
-	}*/
+	}
 	
 	private class LoadBooksTask extends AsyncTask<Selections, Integer, QueryResult<LibraryBook>> {		
 		
@@ -555,47 +313,19 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 			waitDialog.show();
 		}
 		
-		public QueryResult<LibraryBook> execute(QueryResult<LibraryBook> findMonte) {
-			// TODO Auto-generated method stub
-			
-			 String query = "";
-			return libraryService.findMonte(query);
-		}
-
 		protected QueryResult<LibraryBook> doInBackground(Selections... params) {
-			
-			String query = "art";	
-				return libraryService.findMonte(query);
-			//}						
+			//Intent to get the search input
+				Intent intent = getIntent();
+				//Assign the input of the search dialog then adapt it to the library service.
+				String query = intent.getStringExtra(SearchManager.QUERY);	
+				Log.d("Isoma", "The item queried is " + query);
+				return libraryService.findMonte(query);							
 		}
 		
 		protected void onPostExecute(QueryResult<LibraryBook> result) {
 			bookAdapter.setResult(result);
 			waitDialog.hide();
 			waitDialog.dismiss();
-			
-			/*if ( sel == Selections.LAST_ADDED && result.getSize() == 0 ) {
-				
-				AlertDialog.Builder builder = new AlertDialog.Builder(SearchDetailsActivity.this);
-				builder.setTitle(R.string.no_books_found);
-				builder.setMessage( getString(R.string.scan_bks_question) );
-				builder.setPositiveButton(android.R.string.yes, new OnClickListener() {
-					
-					public void onClick(DialogInterface dialog, int which) {
-						dialog.dismiss();		
-						new ImportBooksTask().execute(new File("/sdcard"));
-					}
-				});
-				
-				builder.setNegativeButton(android.R.string.no, new OnClickListener() {
-					
-					public void onClick(DialogInterface dialog, int which) {
-						dialog.dismiss();						
-					}
-				});				
-				
-				builder.show();
-			}*/
 		}
 		
 	}
