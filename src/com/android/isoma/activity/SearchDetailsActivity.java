@@ -41,6 +41,7 @@ import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
@@ -51,6 +52,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.android.isoma.IsomaActionActivity;
 import com.android.isoma.R;
 import com.android.isoma.library.LibraryBook;
@@ -74,9 +77,12 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 	
 	@InjectResource(R.drawable.river_diary)
 	private Drawable backupCover;
+	
+	@InjectView(R.id.searchTerm) 
+	private TextView searchValue;
 		
 	private static enum Selections {
-		 BY_LAST_READ, LAST_ADDED, UNREAD, BY_TITLE, BY_AUTHOR, FIND_MONTE;
+		 BY_LAST_READ, LAST_ADDED, UNREAD, BY_TITLE, BY_AUTHOR;
 	}	
 	
 	public BookAdapter bookAdapter;
@@ -193,24 +199,34 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 		});						
 	}	
 	
-	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		
-		MenuItem prefs = menu.add(R.string.prefs);
-		prefs.setIcon( getResources().getDrawable(R.drawable.ic_menu_settings) );
-		
-		prefs.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			
-			public boolean onMenuItemClick(MenuItem item) {
-				Intent intent = new Intent(SearchDetailsActivity.this, PageTurnerPrefsActivity.class);
-				startActivity(intent);
-				
-				return true;
-			}
-		});
-	
-		return true;
-	}	
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.search_menu, menu);
+        return true;	
+    }
+	  @Override
+		public boolean onOptionsItemSelected(MenuItem item) {
+		        switch (item.getItemId()) {
+		            case R.id.ClearYes:
+		            	SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+		            			LibraryProvider.AUTHORITY, LibraryProvider.MODE);
+		            	suggestions.clearHistory();
+		            	Toast.makeText(this, "Suggestions cleared!", Toast.LENGTH_SHORT).show();
+		                return true;
+		            case R.id.ClearNo:
+		                Toast.makeText(this, "Canceled!", Toast.LENGTH_SHORT).show();
+		                return true;
+		            // Generic catch all for all the other menu resources
+		            default:
+		                // Don't toast text when a submenu is clicked
+		                if (!item.hasSubMenu()) {
+		                    Toast.makeText(this, item.getTitle(), Toast.LENGTH_SHORT).show();
+		                    return true;
+		                }
+		                break;
+		        }
+		        return false;
+		    }
 	
 	@Override
 	protected void onStop() {		
@@ -318,7 +334,9 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 				Intent intent = getIntent();
 				//Assign the input of the search dialog then adapt it to the library service.
 				String query = intent.getStringExtra(SearchManager.QUERY);	
-				Log.d("Isoma", "The item queried is " + query);
+				//Log.d("Isoma", "The item queried is " + query);
+				searchValue.setText("You searched: " + query+" ");
+				
 				return libraryService.findMonte(query);							
 		}
 		

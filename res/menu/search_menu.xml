@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/clear_suggestions"
+          android:icon="@android:drawable/ic_menu_close_clear_cancel"
+          android:title="Clear Search Suggestions">
+    	 <menu> 
+          <item android:id="@+id/ClearYes"
+          android:title="Yes" />       
+           <item android:id="@+id/ClearNo"
+          android:title="No" />
+            </menu>
+     </item>  
+</menu>
