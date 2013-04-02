@@ -2,27 +2,62 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
 	android:key="IsomaState">
 	
-	<PreferenceCategory
-                android:title="Sync settings"> 
-                 
-	<EditTextPreference
-	            android:key="email"
-	            android:title="E-mail address"
-	            android:summary="Used to sync your progress across devices. Leave blank to disable syncing."
-	            android:dialogTitle="E-mail address"
-	            android:dialogMessage="Please enter a valid e-mail address"   
-	            />
-	
-	<EditTextPreference
-	            android:key="device_name"
-	            android:title="Device name"
-	            android:summary="Unique name for this device, for conflict resolution."
-	            android:dialogTitle="Device name"
-	            android:dialogMessage="Please enter a name for this device."
-	            android:dependency="email"   
-	            />
-	</PreferenceCategory>
 
+ 	<PreferenceCategory
+                android:title="Text display settings">
+                
+     <ListPreference
+     		android:key="font_face"
+            android:title="Font face"
+            android:summary="Main font for text display"            
+        	android:defaultValue="sans"
+        	android:entries="@array/fontLabels"
+        	android:entryValues="@array/fonts" />
+                    
+                
+     <CheckBoxPreference
+				android:key="strip_whitespace"
+				android:title="Strip whitespace"
+				android:summary="Strips out unneeded blank lines."
+				android:defaultValue="true"
+				/>  		
+	
+	<com.hlidskialf.android.preference.SeekBarPreference
+				android:key="itext_size"
+				android:title="Text size"
+				android:dialogTitle="Font size"
+				android:summary="The size of the font used for displaying books."				
+				android:defaultValue="16"
+				android:max="48"
+				/>	
+				
+	<com.hlidskialf.android.preference.SeekBarPreference
+				android:key="margin_h"
+				android:title="Horizontal margins"
+				android:summary="Space on the left and right edge of the screen."
+				android:dialogTitle="Margin size"								
+				android:defaultValue="15"
+				android:max="150"				
+				/>    					
+	
+	<com.hlidskialf.android.preference.SeekBarPreference
+				android:key="margin_v"
+				android:title="Vertical margins"
+				android:summary="Space on the top and bottom edge of the screen."
+				android:dialogTitle="Margin size"								
+				android:defaultValue="15"
+				android:max="150"				
+				/>  
+	<com.hlidskialf.android.preference.SeekBarPreference
+				android:key="line_spacing"
+				android:title="Line spacing"
+				android:summary="Adds extra vertical space between lines."
+				android:dialogTitle="Line spacing"								
+				android:defaultValue="2"
+				android:max="50"				
+				/>
+	
+	</PreferenceCategory>
 	<PreferenceCategory
                 android:title="Autoscroll settings">  		
 
@@ -105,62 +140,6 @@
 	            
 	
 	</PreferenceCategory>
-	
-	<PreferenceCategory
-                android:title="Text display settings">
-                
-     <ListPreference
-     		android:key="font_face"
-            android:title="Font face"
-            android:summary="Main font for text display"            
-        	android:defaultValue="gen_book_bas"
-        	android:entries="@array/fontLabels"
-        	android:entryValues="@array/fonts" />
-                    
-                
-     <CheckBoxPreference
-				android:key="strip_whitespace"
-				android:title="Strip whitespace"
-				android:summary="Strips out unneeded blank lines."
-				android:defaultValue="true"
-				/>  		
-	
-	<com.hlidskialf.android.preference.SeekBarPreference
-				android:key="itext_size"
-				android:title="Text size"
-				android:dialogTitle="Font size"
-				android:summary="The size of the font used for displaying books."				
-				android:defaultValue="16"
-				android:max="48"
-				/>	
-				
-	<com.hlidskialf.android.preference.SeekBarPreference
-				android:key="margin_h"
-				android:title="Horizontal margins"
-				android:summary="Space on the left and right edge of the screen."
-				android:dialogTitle="Margin size"								
-				android:defaultValue="15"
-				android:max="150"				
-				/>    					
-	
-	<com.hlidskialf.android.preference.SeekBarPreference
-				android:key="margin_v"
-				android:title="Vertical margins"
-				android:summary="Space on the top and bottom edge of the screen."
-				android:dialogTitle="Margin size"								
-				android:defaultValue="15"
-				android:max="150"				
-				/>  
-	<com.hlidskialf.android.preference.SeekBarPreference
-				android:key="line_spacing"
-				android:title="Line spacing"
-				android:summary="Adds extra vertical space between lines."
-				android:dialogTitle="Line spacing"								
-				android:defaultValue="0"
-				android:max="50"				
-				/>
-	
-	</PreferenceCategory>		
 			
 	<PreferenceCategory
                 android:title="Colour settings">

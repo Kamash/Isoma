@@ -30,13 +30,11 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.SearchRecentSuggestions;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -54,7 +52,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.isoma.IsomaActionActivity;
+import com.android.isoma.EpubSite;
 import com.android.isoma.R;
 import com.android.isoma.library.LibraryBook;
 import com.android.isoma.library.LibraryProvider;
@@ -93,6 +91,7 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 	private ProgressDialog waitDialog;
 	private ProgressDialog importDialog;	
 	
+	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory.getLogger(SearchDetailsActivity.class); 
 	
 	@Override
@@ -105,7 +104,7 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
         // You can also assign the title programmatically by passing a
         // CharSequence or resource id.
         actionBar.setTitle(R.string.search_title);
-        actionBar.setHomeAction(new IntentAction(this, IsomaActionActivity.createIntent(this), R.drawable.ic_title_home_default));
+        actionBar.setHomeAction(new IntentAction(this, EpubSite.createIntent(this), R.drawable.ic_title_home_default));
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.addAction(new SearchBookList());
         final Action settingsAction = new IntentAction(this, new Intent(this, PageTurnerPrefsActivity.class), R.drawable.ic_menu_settingis);
@@ -289,8 +288,6 @@ public class SearchDetailsActivity extends RoboActivity implements OnItemClickLi
 			} else {
 				rowView = convertView;
 			}
-			Typeface.createFromAsset(getAssets(),
-            "gen_bk_bas.ttf");
 			
 			TextView titleView = (TextView) rowView.findViewById(R.id.bookTitle);
 			//titleView.setTypeface(tf,R.style.LibView);

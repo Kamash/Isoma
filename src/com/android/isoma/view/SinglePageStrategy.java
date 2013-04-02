@@ -227,5 +227,10 @@ public class SinglePageStrategy implements PageChangeStrategy {
 	public boolean isScrolling() {		
 		return false;
 	}
+
+	public boolean isAtEnd() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 	
 }

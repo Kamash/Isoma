@@ -175,5 +175,17 @@ public class ScrollingStrategy implements PageChangeStrategy {
 	public boolean isScrolling() {
 		return true;
 	}
+
+	public boolean isAtEnd() {
+		int ypos = bookView.getScrollY() + bookView.getHeight();
+		
+		Layout layout = this.childView.getLayout();
+		if ( layout == null ) {
+			return false;
+		}
+		
+		int line = layout.getLineForVertical(ypos);
+		return line == layout.getLineCount() -1;
+	}
 	
 }

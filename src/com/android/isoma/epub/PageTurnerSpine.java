@@ -1,23 +1,25 @@
 /*
  * Copyright (C) 2011 Alex Kuiper
  * 
- * This file is part of Isoma
+ * This file is part of PageTurner
  *
- * Isoma is free software: you can redistribute it and/or modify
+ * PageTurner is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Isoma is distributed in the hope that it will be useful,
+ * PageTurner is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Isoma.  If not, see <http://www.gnu.org/licenses/>.*
+ * along with PageTurner.  If not, see <http://www.gnu.org/licenses/>.*
  */
 package com.android.isoma.epub;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,12 +38,16 @@ public class PageTurnerSpine {
 
 	private List<SpineEntry> entries;
 	
+	private List<List<Integer>> pageOffsets = new ArrayList<List<Integer>>();
+	
 	private int position;
 	
 	public static final String COVER_HREF = "PageTurnerCover";
 	
 	/** How long should a cover page be to be included **/
 	private static final int COVER_PAGE_THRESHOLD = 1024;
+	
+	private String tocHref;
 	
 	/**
 	 * Creates a new Spine from this book.
@@ -68,8 +74,47 @@ public class PageTurnerSpine {
 	      	if ( href == null || ! (href.equals(res.getHref()))) {
 	      		addResource(res);
 	      	}
-	    }	 
+	    }
+	    
+	    if ( book.getNcxResource() != null ) {
+	    	this.tocHref = book.getNcxResource().getHref();
+	    }
 	}
+	
+	public void setPageOffsets(List<List<Integer>> pageOffsets) {
+		this.pageOffsets = pageOffsets;
+	}
+	
+	public int getTotalNumberOfPages() {
+		int total = 0;
+		for ( List<Integer> pagesPerSection: pageOffsets ) {
+			total += pagesPerSection.size();
+		}
+		
+		return total;
+	}
+	
+	public int getPageNumberFor( int index, int position ) {
+		
+		int pageNum = 0;
+		
+		if ( index >= pageOffsets.size() ) {
+			return -1;
+		}
+		
+		for ( int i=0; i < index; i++ ) {
+			pageNum += pageOffsets.get(i).size();			
+		}
+		
+		List<Integer> offsets = pageOffsets.get(index);
+		
+		for ( int i=0; i < offsets.size() && offsets.get(i) < position; i++ ) {
+			pageNum++;
+		}
+		
+		return pageNum;
+	}
+	
 	
 	/**
 	 * Adds a new resource.
@@ -155,12 +200,88 @@ public class PageTurnerSpine {
 	 * @return
 	 */
 	public Resource getCurrentResource() {
+		return getResourceForIndex(position);
+	}
+	
+	public Resource getResourceForIndex( int index ) {
 		if ( entries.isEmpty() ) {
 			return null;
 		}
 		
-		return entries.get(position).resource;
+		return entries.get(index).resource;
 	}
+	
+	/**
+	 * Resolves a href relative to the current resource.
+	 * 
+	 * @param href
+	 * @return
+	 */
+	public String resolveHref( String href ) {		
+		
+		Resource res = getCurrentResource();
+		
+		if ( res == null || res.getHref() == null ) {
+			return href;
+		}
+		
+		return resolveHref(href, res.getHref());			
+	}
+	
+	/**
+	 * Resolves a HREF relative to the Table of Contents
+	 * 
+	 * @param href
+	 * @return
+	 */
+	public String resolveTocHref( String href ) {
+		if ( this.tocHref != null ) {
+			return resolveHref(href, tocHref);
+		}
+		
+		return href;
+	}
+	
+	private static String resolveHref( String href, String against ) {
+		try {
+			String result = new URI(encode(against)).resolve(encode(href)).getPath();
+			return result;
+		} 
+		catch (URISyntaxException u) {
+			return href;
+		}	
+	}
+	
+	private static String encode(String input) {
+        StringBuilder resultStr = new StringBuilder();
+        for (char ch : input.toCharArray()) {
+            if (isUnsafe(ch)) {
+                resultStr.append('%');
+                resultStr.append(toHex(ch / 16));
+                resultStr.append(toHex(ch % 16));
+            } else {
+                resultStr.append(ch);
+            }
+        }
+        return resultStr.toString();
+    }
+
+    private static char toHex(int ch) {
+        return (char) (ch < 10 ? '0' + ch : 'A' + ch - 10);
+    }
+
+    /**
+     * This is slightly unsafe: it lets / and % pass, making 
+     * multiple encodes safe.
+     * @param ch
+     * @return
+     */
+    private static boolean isUnsafe(char ch) {
+        if (ch > 128 || ch < 0)
+            return true;
+        return " %$&+,:;=?@<>#[]".indexOf(ch) >= 0;
+    }
+
 	
 	/**
 	 * Returns the href of the current resource.
@@ -206,8 +327,11 @@ public class PageTurnerSpine {
 	 */
 	public boolean navigateByHref( String href ) {
 		
+		String encodedHref = encode(href);
+		
 		for ( int i=0; i < size(); i++ ) {
-			if ( entries.get(i).href.equals(href) ) {
+			String entryHref = encode(entries.get(i).href);
+			if ( entryHref.equals(encodedHref)){
 				this.position = i;
 				return true;
 			}
@@ -224,39 +348,79 @@ public class PageTurnerSpine {
 	 * @param progressInPart
 	 * @return
 	 */
-	public int getProgressPercentage(int progressInPart) {		
+	public int getProgressPercentage(double progressInPart) {		
+		return getProgressPercentage(getPosition(), progressInPart);				
+	}
+	
+	private int getProgressPercentage(int index, double progressInPart) {
 		
 		if ( this.entries == null ) {
 			return -1;
 		}
 		
-		int total = 0;
-		int uptoHere = 0;
+		double uptoHere = 0;
 		
-		for ( int i=0; i < entries.size(); i++ ) {
-			
-			if ( i < this.position ) {
-				uptoHere += entries.get(i).size;
-			}
-			
-			total += entries.get(i).size;
-		}
+		List<Double> percentages = getRelativeSizes();
 		
-		double pastParts = (double) uptoHere / (double) total; 
+		for ( int i=0; i < percentages.size() && i < index; i++ ) {
+			uptoHere += percentages.get( i );
+		}  
 		
-		int pos = progressInPart;
-		int totalLength = entries.get(this.position).size;
+		double thisPart = percentages.get(index);
 		
-		double thisPart = (double) entries.get(this.position).size / (double) total;
+		double progress = uptoHere + (progressInPart * thisPart);
 		
-		double inThisPart = (double) pos / (double) totalLength;
-		
-		double progress = pastParts + (inThisPart * thisPart);
-		
-		return (int) (progress * 100);		
+		return (int) (progress * 100);	
 	}
 	
-	private Resource createCoverResource(Book book) {		
+	/**
+	 * Returns the progress percentage for the given text position 
+	 * in the given index.
+	 * 
+	 * @param index
+	 * @param position
+	 * @return
+	 */
+	public int getProgressPercentage(int index, int position) {
+		if ( this.entries == null || index >= entries.size() ) {
+			return -1;
+		}
+		
+		double progressInPart = ( (double)position / (double) entries.get(index).size);
+		return getProgressPercentage(index, progressInPart);		
+	}
+	
+	
+	
+	/**
+	 * Returns a list of doubles representing the relative size of each spine index.
+	 * @return
+	 */
+	public List<Double> getRelativeSizes() {
+		int total = 0;
+		List<Integer> sizes = new ArrayList<Integer>();
+		
+		for ( int i=0; i < entries.size(); i++ ) {
+			int size = entries.get(i).size;
+			sizes.add(size);
+			total += size;
+		}
+		
+		List<Double> result = new ArrayList<Double>();
+		for ( int i=0; i < sizes.size(); i++ ) {
+			double part = (double) sizes.get(i) / (double) total;
+			result.add( part );
+		}
+		
+		return result;
+	}
+	
+	private Resource createCoverResource(Book book) {	
+		
+		if ( book.getCoverPage() != null && book.getCoverPage().getSize() > 0 ) {
+			return book.getCoverPage();
+		}
+				
 		Resource res = new Resource(generateCoverPage(book).getBytes(), COVER_HREF);
 		res.setTitle("Cover");
 		
@@ -283,7 +447,7 @@ public class PageTurnerSpine {
 			centerpiece = "<img src='" + book.getCoverImage().getHref() + "'>";
 		}		
 		
-		return "<html><body><center>" + centerpiece + "</center></body></html>";
+		return "<html><body>" + centerpiece + "</body></html>";
 	}
 	
 	private class SpineEntry {

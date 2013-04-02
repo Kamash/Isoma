@@ -22,6 +22,7 @@ import android.content.Context;
 
 public class DeviceCommunicator{
 	
+	@SuppressWarnings("unused")
 	private Context context;
 
 

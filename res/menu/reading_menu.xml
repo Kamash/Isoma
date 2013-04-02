@@ -2,9 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
  
-	<item android:id="@+id/open_file"          
+	<!-- <item android:id="@+id/open_file"          
           android:title="@string/open_file"
-          android:icon="@drawable/file" />
+          android:icon="@drawable/file" /> -->
           
     <item android:id="@+id/open_library"          
           android:title="@string/open_library"
@@ -30,12 +30,12 @@
           android:title="@string/rolling_blind"
           android:icon="@drawable/play" />
           
-	<item android:id="@+id/manual_sync"          
+	<!-- <item android:id="@+id/manual_sync"          
           android:title="@string/manual_sync"
-          android:icon="@drawable/cloud_refresh" /> 
+          android:icon="@drawable/cloud_refresh" />  -->
           
     <item android:id="@+id/about"          
-          android:title="@string/about"
-          android:icon="@drawable/info" />  
+          android:title="@string/search"
+          android:icon="@android:drawable/ic_menu_search" />  
                
 </menu>

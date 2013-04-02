@@ -17,7 +17,6 @@
  * along with Isoma.  If not, see <http://www.gnu.org/licenses/>.*
  */
 
-
 package com.android.isoma.view;
 
 import java.io.IOException;
@@ -31,13 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.isoma.htmlspanner.HtmlSpanner;
-import com.isoma.htmlspanner.TagNodeHandler;
-import com.isoma.htmlspanner.handlers.TableHandler;
-import com.android.isoma.enc.ProcessData;
-import com.android.isoma.epub.PageTurnerSpine;
-import com.android.isoma.epub.ResourceLoader;
-import com.android.isoma.epub.ResourceLoader.ResourceCallback;
 import nl.siegmann.epublib.Constants;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.MediaType;
@@ -47,8 +39,6 @@ import nl.siegmann.epublib.epub.EpubReader;
 import nl.siegmann.epublib.service.MediatypeService;
 import nl.siegmann.epublib.util.StringUtil;
 
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.htmlcleaner.TagNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,225 +46,259 @@ import org.slf4j.LoggerFactory;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.text.Layout;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.SpannedString;
 import android.text.method.LinkMovementMethod;
 import android.text.method.MovementMethod;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.text.style.URLSpan;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.android.isoma.epub.PageTurnerSpine;
+import com.android.isoma.epub.ResourceLoader;
+import com.android.isoma.epub.ResourceLoader.ResourceCallback;
+import com.android.isoma.tasks.SearchTextTask.SearchResult;
+import com.isoma.htmlspanner.HtmlSpanner;
+import com.isoma.htmlspanner.TagNodeHandler;
+import com.isoma.htmlspanner.handlers.TableHandler;
 
 public class BookView extends ScrollView {
-    	
+
 	private int storedIndex;
 	private String storedAnchor;
-	
+
 	private TextView childView;
-	
+
 	private Set<BookViewListener> listeners;
-	
-	private HtmlSpanner spanner;		
+
+	private HtmlSpanner spanner;
 	private TableHandler tableHandler;
-	
+
 	private OnTouchListener touchListener;
-	
+
 	private PageTurnerSpine spine;
-	
+
+
 	private String fileName;
-	private Book book;	
-	
+	private Book book;
+
 	private Map<String, Integer> anchors;
-	
+
 	private int prevIndex = -1;
 	private int prevPos = -1;
-	
+
 	private PageChangeStrategy strategy;
-	private ResourceLoader loader;		
-	
+	private ResourceLoader loader;
+
 	private int horizontalMargin = 0;
 	private int verticalMargin = 0;
 	private int lineSpacing = 0;
-	
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(BookView.class);
-	
+
+	@SuppressWarnings("unused")
 	private Context context;
-	
+
 	public BookView(Context context, AttributeSet attributes) {
-		super(context, attributes);		
-		this.context=context;
-		
+		super(context, attributes);
+		this.context = context;
+
 		this.listeners = new HashSet<BookViewListener>();
-				
+
 		this.childView = new TextView(context) {
 			@Override
 			protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 				super.onSizeChanged(w, h, oldw, oldh);
-				restorePosition();	
-				
-				int tableWidth = (int) ( this.getWidth() * 0.9 );
-				tableHandler.setTableWidth( tableWidth );
+				restorePosition();
+
+				int tableWidth = (int) (this.getWidth() * 0.9);
+				tableHandler.setTableWidth(tableWidth);
 			}
-			
+
 			@Override
 			public boolean dispatchKeyEvent(KeyEvent event) {
 				return BookView.this.dispatchKeyEvent(event);
-			}			
-			
-		};  
-		
-		childView.setLongClickable(true);	        
-        this.setVerticalFadingEdgeEnabled(false);
-        childView.setFocusable(true);
-        childView.setLinksClickable(true);
-        childView.setLayoutParams(new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT, android.view.ViewGroup.LayoutParams.FILL_PARENT) );
-        
-        MovementMethod m = childView.getMovementMethod();  
-        if ((m == null) || !(m instanceof LinkMovementMethod)) {  
-            if (childView.getLinksClickable()) {  
-                childView.setMovementMethod(LinkMovementMethod.getInstance());  
-            }  
-        }  
-        
-        this.setSmoothScrollingEnabled(false);        
-        this.addView(childView);        
-        
-        this.anchors = new HashMap<String, Integer>();
-        this.tableHandler = new TableHandler();
-	}	
-	
+			}
+
+		};
+
+		childView.setLongClickable(true);
+		this.setVerticalFadingEdgeEnabled(false);
+		childView.setFocusable(true);
+		childView.setLinksClickable(true);
+		childView.setLayoutParams(new LayoutParams(
+				android.view.ViewGroup.LayoutParams.FILL_PARENT,
+				android.view.ViewGroup.LayoutParams.FILL_PARENT));
+
+		MovementMethod m = childView.getMovementMethod();
+		if ((m == null) || !(m instanceof LinkMovementMethod)) {
+			if (childView.getLinksClickable()) {
+				childView.setMovementMethod(LinkMovementMethod.getInstance());
+			}
+		}
+
+		this.setSmoothScrollingEnabled(false);
+		this.addView(childView);
+
+		this.anchors = new HashMap<String, Integer>();
+		this.tableHandler = new TableHandler();
+	}
+    
 	public void setSpanner(HtmlSpanner spanner) {
 		this.spanner = spanner;
-        spanner.registerHandler("img", new ImageTagHandler() );
-        spanner.registerHandler("a", new AnchorHandler(new LinkTagHandler()) );
-        
-        spanner.registerHandler("h1", new AnchorHandler(spanner.getHandlerFor("h1") ));
-        spanner.registerHandler("h2", new AnchorHandler(spanner.getHandlerFor("h2") ));
-        spanner.registerHandler("h3", new AnchorHandler(spanner.getHandlerFor("h3") ));
-        spanner.registerHandler("h4", new AnchorHandler(spanner.getHandlerFor("h4") ));
-        spanner.registerHandler("h5", new AnchorHandler(spanner.getHandlerFor("h5") ));
-        spanner.registerHandler("h6", new AnchorHandler(spanner.getHandlerFor("h6") ));
-        
-        spanner.registerHandler("p", new AnchorHandler(spanner.getHandlerFor("p") ));
-        spanner.registerHandler("table", tableHandler);
-	}	
-	
+		spanner.registerHandler("img", new ImageTagHandler());
+		spanner.registerHandler("a", new AnchorHandler(new LinkTagHandler()));
+
+		spanner.registerHandler("h1",
+				new AnchorHandler(spanner.getHandlerFor("h1")));
+		spanner.registerHandler("h2",
+				new AnchorHandler(spanner.getHandlerFor("h2")));
+		spanner.registerHandler("h3",
+				new AnchorHandler(spanner.getHandlerFor("h3")));
+		spanner.registerHandler("h4",
+				new AnchorHandler(spanner.getHandlerFor("h4")));
+		spanner.registerHandler("h5",
+				new AnchorHandler(spanner.getHandlerFor("h5")));
+		spanner.registerHandler("h6",
+				new AnchorHandler(spanner.getHandlerFor("h6")));
+
+		spanner.registerHandler("p",
+				new AnchorHandler(spanner.getHandlerFor("p")));
+		spanner.registerHandler("table", tableHandler);
+	}
+
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 		this.loader = new ResourceLoader(fileName);
 	}
-	
+
 	@Override
-	public void setOnTouchListener(OnTouchListener l) {		
+	public void setOnTouchListener(OnTouchListener l) {
 		super.setOnTouchListener(l);
 		this.childView.setOnTouchListener(l);
 		this.touchListener = l;
 	}
-	
+
 	public void setStripWhiteSpace(boolean stripWhiteSpace) {
 		this.spanner.setStripExtraWhiteSpace(stripWhiteSpace);
-	}	
-	
+	}
+
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
-		
-		if ( this.touchListener != null ) {
+
+		if (this.touchListener != null) {
 			this.touchListener.onTouch(this, ev);
-		}	
-		
-		return super.onTouchEvent(ev);					
-	}	
-	
+		}
+
+		return super.onTouchEvent(ev);
+	}
+
 	public boolean hasPrevPosition() {
 		return this.prevIndex != -1 && this.prevPos != -1;
 	}
 
-	public void setLineSpacing( int lineSpacing ) {
-		if ( lineSpacing != this.lineSpacing ) {
+	public void setLineSpacing(int lineSpacing) {
+		if (lineSpacing != this.lineSpacing) {
 			this.lineSpacing = lineSpacing;
 			this.childView.setLineSpacing(lineSpacing, 1);
-			
-			if ( strategy != null ) {
+
+			if (strategy != null) {
 				strategy.updatePosition();
 			}
 		}
 	}
-	
+
 	public int getLineSpacing() {
 		return lineSpacing;
 	}
-	
+
 	public void setHorizontalMargin(int horizontalMargin) {
-		
-		if ( horizontalMargin != this.horizontalMargin ) {
+
+		if (horizontalMargin != this.horizontalMargin) {
 			this.horizontalMargin = horizontalMargin;
-			setPadding(this.horizontalMargin, this.verticalMargin, this.horizontalMargin, this.verticalMargin);
-			if ( strategy != null ) {
+			setPadding(this.horizontalMargin, this.verticalMargin,
+					this.horizontalMargin, this.verticalMargin);
+			if (strategy != null) {
 				strategy.updatePosition();
 			}
-		}		
+		}
 	}
-	
+
 	public void setLinkColor(int color) {
 		this.childView.setLinkTextColor(color);
 	}
-	
+
 	public void setVerticalMargin(int verticalMargin) {
-		if ( verticalMargin != this.verticalMargin ) {
+		if (verticalMargin != this.verticalMargin) {
 			this.verticalMargin = verticalMargin;
-			setPadding(this.horizontalMargin, this.verticalMargin, this.horizontalMargin, this.verticalMargin);
-			if ( strategy != null ) {
+			setPadding(this.horizontalMargin, this.verticalMargin,
+					this.horizontalMargin, this.verticalMargin);
+			if (strategy != null) {
 				strategy.updatePosition();
 			}
-		}		
-	}	
-	
+		}
+	}
+
 	public int getHorizontalMargin() {
 		return horizontalMargin;
 	}
-	
+
 	public int getVerticalMargin() {
 		return verticalMargin;
 	}
-	
+
 	public void goBackInHistory() {
-		
-		this.strategy.clearText();
-		this.spine.navigateByIndex( this.prevIndex );
-		strategy.setPosition(this.prevPos);
-		
-		this.storedAnchor = null;
-		this.prevIndex = -1;
-		this.prevPos = -1;
-		
-		loadText();
+
+		if (this.prevIndex == this.getIndex()) {
+			strategy.setPosition(prevPos);
+
+			this.storedAnchor = null;
+			this.prevIndex = -1;
+			this.prevPos = -1;
+
+			restorePosition();
+		} else {
+
+			this.strategy.clearText();
+			this.spine.navigateByIndex(this.prevIndex);
+			strategy.setPosition(this.prevPos);
+
+			this.storedAnchor = null;
+			this.prevIndex = -1;
+			this.prevPos = -1;
+
+			loadText();
+		}
 	}
-	
+
 	public void clear() {
 		this.childView.setText("");
 		this.anchors.clear();
 		this.storedAnchor = null;
-		this.storedIndex = -1;		
+		this.storedIndex = -1;
 		this.book = null;
 		this.fileName = null;
-		
+
 		this.strategy.reset();
 	}
-	
+
 	/**
 	 * Loads the text and saves the restored position.
 	 */
@@ -282,48 +306,48 @@ public class BookView extends ScrollView {
 		strategy.clearText();
 		loadText();
 	}
-	
+
 	public void setIndex(int index) {
 		this.storedIndex = index;
 	}
-	
-	void loadText() {		
-        new LoadTextTask().execute();        
+
+	void loadText() {
+		new LoadTextTask().execute();
 	}
-	
+
 	public void setTypeface(Typeface typeFace) {
-		this.childView.setTypeface( typeFace );		
+		this.childView.setTypeface(typeFace);
 		this.tableHandler.setTypeFace(typeFace);
-	}	
-	
-	public void pageDown() {		
+	}
+
+	public void pageDown() {
 		strategy.pageDown();
 	}
-	
+
 	public void pageUp() {
 		strategy.pageUp();
 	}
-	
+
 	@Override
-	public void scrollBy(int x, int y) {		
-		super.scrollBy(x, y);		
+	public void scrollBy(int x, int y) {
+		super.scrollBy(x, y);
 		progressUpdate();
 	}
-	
+
 	TextView getInnerView() {
 		return childView;
 	}
-	
+
 	PageTurnerSpine getSpine() {
 		return this.spine;
 	}
-	
+
 	@Override
-	public void scrollTo(int x, int y) {		
+	public void scrollTo(int x, int y) {
 		super.scrollTo(x, y);
 		progressUpdate();
-	}	
-	
+	}
+
 	/**
 	 * Returns the full word containing the character at the selected location.
 	 * 
@@ -331,219 +355,221 @@ public class BookView extends ScrollView {
 	 * @param y
 	 * @return
 	 */
-	public CharSequence getWordAt( float x, float y ) {
-		
+	public CharSequence getWordAt(float x, float y) {
+
 		CharSequence text = this.childView.getText();
-		
-		if ( text.length() == 0 ) {
+
+		if (text.length() == 0) {
 			return null;
 		}
-		
+
 		Layout layout = this.childView.getLayout();
-		int line = layout.getLineForVertical( (int) y);
-		
+		int line = layout.getLineForVertical((int) y);
+
 		int offset = layout.getOffsetForHorizontal(line, x);
-		
-		if ( isBoundaryCharacter(text.charAt(offset)) ) {
+
+		if (isBoundaryCharacter(text.charAt(offset))) {
 			return null;
 		}
-		
-		int left = Math.max(0,offset -1);
-		int right = Math.min( text.length(), offset );
-		
+
+		int left = Math.max(0, offset - 1);
+		int right = Math.min(text.length(), offset);
+
 		CharSequence word = text.subSequence(left, right);
-		while ( left > 0 && ! isBoundaryCharacter(word.charAt(0))) {
+		while (left > 0 && !isBoundaryCharacter(word.charAt(0))) {
 			left--;
 			word = text.subSequence(left, right);
 		}
-		
-		while ( right < text.length() && ! isBoundaryCharacter(word.charAt(word.length() -1))) {
+
+		while (right < text.length()
+				&& !isBoundaryCharacter(word.charAt(word.length() - 1))) {
 			right++;
 			word = text.subSequence(left, right);
 		}
-		
+
 		int start = 0;
 		int end = word.length();
-		
-		if ( isBoundaryCharacter(word.charAt(0))) {
+
+		if (isBoundaryCharacter(word.charAt(0))) {
 			start = 1;
 		}
-		
-		if ( isBoundaryCharacter(word.charAt(word.length() - 1))) {
+
+		if (isBoundaryCharacter(word.charAt(word.length() - 1))) {
 			end = word.length() - 1;
 		}
-		
-		return word.subSequence(start, end );
+
+		return word.subSequence(start, end);
 	}
-	
-	private static boolean isBoundaryCharacter( char c ) {
-		char[] boundaryChars = { ' ', '.', ',','\"',
-				'\'', '\n', '\t', ':', '!'
-		};
-		
-		for ( int i=0; i < boundaryChars.length; i++ ) {
+
+	private static boolean isBoundaryCharacter(char c) {
+		char[] boundaryChars = { ' ', '.', ',', '\"', '\'', '\n', '\t', ':',
+				'!' };
+
+		for (int i = 0; i < boundaryChars.length; i++) {
 			if (boundaryChars[i] == c) {
 				return true;
-			}		
+			}
 		}
-		
+
 		return false;
 	}
-	
-	public void navigateTo( String rawHref ) {
-				
+
+	public void navigateTo(String rawHref) {
+
 		this.prevIndex = this.getIndex();
 		this.prevPos = this.getPosition();
-		
-		//URLDecode the href, so it does not contain %20 etc.
-		String href = URLDecoder.decode( 
-				StringUtil.substringBefore(rawHref, 
-						Constants.FRAGMENT_SEPARATOR_CHAR) );
-		
-		//Don't decode the anchor.
-		String anchor = StringUtil.substringAfterLast(rawHref, 
-				Constants.FRAGMENT_SEPARATOR_CHAR); 
-		
-		if ( ! "".equals(anchor) ) {
+
+		// URLDecode the href, so it does not contain %20 etc.
+		String href = URLDecoder.decode(StringUtil.substringBefore(rawHref,
+				Constants.FRAGMENT_SEPARATOR_CHAR));
+
+		// Don't decode the anchor.
+		String anchor = StringUtil.substringAfterLast(rawHref,
+				Constants.FRAGMENT_SEPARATOR_CHAR);
+
+		if (!"".equals(anchor)) {
 			this.storedAnchor = anchor;
 		}
-		
+
 		this.strategy.clearText();
 		this.strategy.setPosition(0);
-		
-		if ( this.spine.navigateByHref(href) ) {
+
+		if (this.spine.navigateByHref(href)) {
 			loadText();
-		} else {			
+		} else {
 			new LoadTextTask().execute(href);
 		}
-	}	
-	
-	public void navigateTo( int index, int position ) {
-		
+	}
+
+	public void navigateTo(int index, int position) {
+
 		this.prevIndex = this.getIndex();
 		this.prevPos = this.getPosition();
-		
+
 		this.storedIndex = index;
 		this.strategy.clearText();
 		this.strategy.setPosition(position);
-				
+
 		this.spine.navigateByIndex(index);
-		
+
 		loadText();
 	}
-	
+
 	public List<TocEntry> getTableOfContents() {
-		if ( this.book == null ) {
+		if (this.book == null) {
 			return null;
 		}
-		
+
 		List<TocEntry> result = new ArrayList<BookView.TocEntry>();
-		
-		flatten( book.getTableOfContents().getTocReferences(), result, 0 );
-		
+
+		flatten(book.getTableOfContents().getTocReferences(), result, 0);
+
 		return result;
 	}
-	
-	private void flatten( List<TOCReference> refs, List<TocEntry> entries, int level ) {
-		
-		if ( refs == null || refs.isEmpty() ) {
+
+	private void flatten(List<TOCReference> refs, List<TocEntry> entries,
+			int level) {
+
+		if (refs == null || refs.isEmpty()) {
 			return;
 		}
-		
-		for ( TOCReference ref: refs ) {
-			
+
+		for (TOCReference ref : refs) {
+
 			String title = "";
-			
-			for ( int i = 0; i < level; i ++ ) {
+
+			for (int i = 0; i < level; i++) {
 				title += "-";
-			}			
-			
-			title += ref.getTitle();
-			
-			if ( ref.getResource() != null ) {
-				entries.add( new TocEntry(title, ref.getCompleteHref() ));
 			}
-			
-			flatten( ref.getChildren(), entries, level + 1 );
+
+			title += ref.getTitle();
+
+			if (ref.getResource() != null) {
+				entries.add(new TocEntry(title, ref.getCompleteHref()));
+			}
+
+			flatten(ref.getChildren(), entries, level + 1);
 		}
 	}
-	
+
 	@Override
 	public void fling(int velocityY) {
 		strategy.clearStoredPosition();
 		super.fling(velocityY);
 	}
-	
+
 	public int getIndex() {
-		if ( this.spine == null ) {
+		if (this.spine == null) {
 			return storedIndex;
 		}
-		
+
 		return this.spine.getPosition();
-	}	
-	
+	}
+
 	public int getPosition() {
-		return strategy.getPosition();		
+		return strategy.getPosition();
 	}
-	
+
 	public void setPosition(int pos) {
-		this.strategy.setPosition(pos);	
+		this.strategy.setPosition(pos);
 	}
-	
+
 	/**
 	 * Scrolls to a previously stored point.
 	 * 
 	 * Call this after setPosition() to actually go there.
 	 */
-	private void restorePosition() {				
-	
-		if ( this.storedAnchor != null && this.anchors.containsKey(storedAnchor) ) {
-			strategy.setPosition( anchors.get(storedAnchor) );
+	private void restorePosition() {
+
+		if (this.storedAnchor != null && this.anchors.containsKey(storedAnchor)) {
+			strategy.setPosition(anchors.get(storedAnchor));
 			this.storedAnchor = null;
 		}
-		
+
 		this.strategy.updatePosition();
 	}
-	
+
 	/**
-	 * Many books use <p> and <h1> tags as anchor points.
-	 * This class harvests those point by wrapping the original
-	 * handler.
+	 * Many books use
+	 * <p>
+	 * and
+	 * <h1>tags as anchor points. This class harvests those point by wrapping
+	 * the original handler.
 	 * 
 	 * @author Alex Kuiper
-	 *
+	 * 
 	 */
 	private class AnchorHandler extends TagNodeHandler {
-		
+
 		private TagNodeHandler wrappedHandler;
-		
+
 		public AnchorHandler(TagNodeHandler wrappedHandler) {
 			this.wrappedHandler = wrappedHandler;
 		}
-		
+
 		@Override
 		public void handleTagNode(TagNode node, SpannableStringBuilder builder,
 				int start, int end) {
-			
+
 			String id = node.getAttributeByName("id");
-			if ( id != null ) {
+			if (id != null) {
 				anchors.put(id, start);
 			}
-			
+
 			wrappedHandler.handleTagNode(node, builder, start, end);
 		}
 	}
-	
+
 	/**
 	 * Creates clickable links.
 	 * 
 	 * @author work
-	 *
+	 * 
 	 */
 	private class LinkTagHandler extends TagNodeHandler {
-		
+
 		private List<String> externalProtocols;
-		
+
 		public LinkTagHandler() {
 			this.externalProtocols = new ArrayList<String>();
 			externalProtocols.add("http://");
@@ -552,372 +578,449 @@ public class BookView extends ScrollView {
 			externalProtocols.add("ftp://");
 			externalProtocols.add("mailto:");
 		}
-		
+
 		@Override
 		public void handleTagNode(TagNode node, SpannableStringBuilder builder,
 				int start, int end) {
-			
+
 			final String href = node.getAttributeByName("href");
-			
-			if ( href == null ) {
+
+			if (href == null) {
 				return;
 			}
-			
-			//First check if it should be a normal URL link
-			for ( String protocol: this.externalProtocols ) {
-				if ( href.toLowerCase().startsWith(protocol)) {
-					builder.setSpan(new URLSpan(href), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+			// First check if it should be a normal URL link
+			for (String protocol : this.externalProtocols) {
+				if (href.toLowerCase().startsWith(protocol)) {
+					builder.setSpan(new URLSpan(href), start, end,
+							Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 					return;
 				}
 			}
-			
-			//If not, consider it an internal nav link.			
+
+			// If not, consider it an internal nav link.
 			ClickableSpan span = new ClickableSpan() {
-					
+
 				@Override
 				public void onClick(View widget) {
-					navigateTo(href);					
+					navigateTo(href);
 				}
 			};
-				
-			builder.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);			 
+
+			builder.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 		}
 	}
-	
+
 	private class ImageCallback implements ResourceCallback {
-		
+
 		private SpannableStringBuilder builder;
 		private int start;
 		private int end;
-		
+
 		public ImageCallback(SpannableStringBuilder builder, int start, int end) {
 			this.builder = builder;
 			this.start = start;
 			this.end = end;
 		}
-		
+
 		public void onLoadResource(String href, InputStream input) {
-			
+
 			Bitmap bitmap = null;
-			try {				
+			try {
 				bitmap = getBitmap(input);
 			} catch (OutOfMemoryError outofmem) {
 				LOG.error("Could not load image", outofmem);
 			}
-			
-			if ( bitmap != null ) {
-				Drawable drawable = new BitmapDrawable( bitmap );
-				drawable.setBounds(0,0, bitmap.getWidth() - 1, bitmap.getHeight() - 1);
-				builder.setSpan( new ImageSpan(drawable), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+			if (bitmap != null) {
+				Drawable drawable = new BitmapDrawable(bitmap);
+				drawable.setBounds(0, 0, bitmap.getWidth() - 1,
+						bitmap.getHeight() - 1);
+				builder.setSpan(new ImageSpan(drawable), start, end,
+						Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			}
-						
+
 		}
-		
+
 		private Bitmap getBitmap(InputStream input) {
-			
-			//BitmapDrawable draw = new BitmapDrawable(getResources(), input);
+
+			// BitmapDrawable draw = new BitmapDrawable(getResources(), input);
 			Bitmap originalBitmap = BitmapFactory.decodeStream(input);
-			
-			int screenHeight = getHeight() - ( verticalMargin * 2);
-			int screenWidth = getWidth() - ( horizontalMargin * 2 );
-			
-			if ( originalBitmap != null ) {
+
+			int screenHeight = getHeight() - (verticalMargin * 2);
+			int screenWidth = getWidth() - (horizontalMargin * 2);
+
+			if (originalBitmap != null) {
 				int originalWidth = originalBitmap.getWidth();
 				int originalHeight = originalBitmap.getHeight();
-				
-				//We scale to screen width for the cover or if the image is too wide.
-				if ( originalWidth > screenWidth || originalHeight > screenHeight || spine.isCover() ) {
-					
-					float ratio = (float) originalWidth / (float) originalHeight;
-					
+
+				// We scale to screen width for the cover or if the image is too
+				// wide.
+				if (originalWidth > screenWidth
+						|| originalHeight > screenHeight || spine.isCover()) {
+
+					float ratio = (float) originalWidth
+							/ (float) originalHeight;
+
 					int targetHeight = screenHeight - 1;
-					int targetWidth = (int)(targetHeight * ratio);					
-					
-					if ( targetWidth > screenWidth - 1 ) {
+					int targetWidth = (int) (targetHeight * ratio);
+
+					if (targetWidth > screenWidth - 1) {
 						targetWidth = screenWidth - 1;
-						targetHeight = (int) (targetWidth * (1/ratio));
-					}				
-					
-					LOG.debug("Rescaling from " + originalWidth + "x" + originalHeight + " to " + targetWidth + "x" + targetHeight );
-					
-					//android.graphics.Bitmap.createScaledBitmap should do the same.					
-					return Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, true);
-				}									
+						targetHeight = (int) (targetWidth * (1 / ratio));
+					}
+
+					LOG.debug("Rescaling from " + originalWidth + "x"
+							+ originalHeight + " to " + targetWidth + "x"
+							+ targetHeight);
+
+					// android.graphics.Bitmap.createScaledBitmap should do the
+					// same.
+					return Bitmap.createScaledBitmap(originalBitmap,
+							targetWidth, targetHeight, true);
+				}
 			}
-			
+
 			return originalBitmap;
-		}		
+		}
 	}
-	
+
 	private class ImageTagHandler extends TagNodeHandler {
-		
+
 		@Override
 		public void handleTagNode(TagNode node, SpannableStringBuilder builder,
-				int start, int end) {						
+				int start, int end) {
 			String src = node.getAttributeByName("src");
-			
-	        builder.append("\uFFFC");
-	        
-	        loader.registerCallback(src, new ImageCallback(builder, start, builder.length()));
-		}				
-		
+
+			builder.append("\uFFFC");
+
+			loader.registerCallback(src, new ImageCallback(builder, start,
+					builder.length()));
+		}
+
 	}
-	
+
 	@Override
 	public void setBackgroundColor(int color) {
 		super.setBackgroundColor(color);
-		
-		if ( this.childView != null ) {
+
+		if (this.childView != null) {
 			this.childView.setBackgroundColor(color);
-		}		
+		}
 	}
-	
-	public void setTextColor( int color ) {
-		if ( this.childView != null ) {
+
+	public void setTextColor(int color) {
+		if (this.childView != null) {
 			this.childView.setTextColor(color);
 		}
-		
+
 		this.tableHandler.setTextColor(color);
 	}
-	
+
 	public static class TocEntry {
 		private String title;
 		private String href;
-		
+
 		public TocEntry(String title, String href) {
 			this.title = title;
 			this.href = href;
 		}
-		
+
 		public String getHref() {
 			return href;
 		}
-		
+
 		public String getTitle() {
 			return title;
 		}
-	}	
-	
+	}
+
 	/**
 	 * Sets the given text to be displayed, overriding the book.
+	 * 
 	 * @param text
 	 */
 	public void setText(Spanned text) {
 		this.strategy.loadText(text);
 		this.strategy.updatePosition();
 	}
-	
+
 	public Book getBook() {
 		return book;
 	}
-	
+
 	public float getTextSize() {
 		return childView.getTextSize();
 	}
-	
+
 	public void setTextSize(float textSize) {
 		this.childView.setTextSize(textSize);
 		this.tableHandler.setTextSize(textSize);
 	}
-	
+
 	public void addListener(BookViewListener listener) {
-		this.listeners.add( listener );
+		this.listeners.add(listener);
 	}
-	
-	private void bookOpened( Book book ) {
-		for ( BookViewListener listener: this.listeners ) {
+
+	private void bookOpened(Book book) {
+		for (BookViewListener listener : this.listeners) {
 			listener.bookOpened(book);
 		}
-	}	
-	
-	private void errorOnBookOpening( String errorMessage ) {
-		for ( BookViewListener listener: this.listeners ) {
+	}
+
+	private void errorOnBookOpening(String errorMessage) {
+		for (BookViewListener listener : this.listeners) {
 			listener.errorOnBookOpening(errorMessage);
 		}
-	}	 
-	
-	private void parseEntryStart( int entry) {
-		for ( BookViewListener listener: this.listeners ) {
+	}
+
+	private void parseEntryStart(int entry) {
+		for (BookViewListener listener : this.listeners) {
 			listener.parseEntryStart(entry);
 		}
-	}	
-	
-	private void parseEntryComplete( int entry, String name ) {
-		for ( BookViewListener listener: this.listeners ) {
+	}
+
+	private void parseEntryComplete(int entry, String name) {
+		for (BookViewListener listener : this.listeners) {
 			listener.parseEntryComplete(entry, name);
 		}
 	}
-	
-	private void progressUpdate() {		
-		
-		if ( this.spine != null ) {
-			int progress = spine.getProgressPercentage(this.getPosition() );
-		
-			if ( progress != -1 ) {
-				for ( BookViewListener listener: this.listeners ) {
+
+	/*
+	 * private void progressUpdate() {
+	 * 
+	 * if ( this.spine != null ) { int progress =
+	 * spine.getProgressPercentage(this.getPosition() );
+	 * 
+	 * if ( progress != -1 ) { for ( BookViewListener listener: this.listeners )
+	 * { listener.progressUpdate(progress); } } } if (this.spine != null &&
+	 * this.strategy.getText() != null && this.strategy.getText().length() > 0)
+	 * {
+	 * 
+	 * double progressInPart = (double) this.getPosition() / (double)
+	 * this.strategy.getText().length();
+	 * 
+	 * if (strategy.getText().length() > 0) { progressInPart = 1d; }
+	 * 
+	 * int progress = spine.getProgressPercentage(progressInPart);
+	 * 
+	 * if ( progress != -1 ) { for ( BookViewListener listener: this.listeners )
+	 * { listener.progressUpdate(progress); } } } }
+	 */
+	private void progressUpdate() {
+
+		if (this.spine != null && this.strategy.getText() != null
+				&& this.strategy.getText().length() > 0) {
+
+			double progressInPart = (double) this.getPosition()
+					/ (double) this.strategy.getText().length();
+
+			if (strategy.getText().length() > 0 && strategy.isAtEnd()) {
+				progressInPart = 1d;
+			}
+
+			int progress = spine.getProgressPercentage(progressInPart);
+
+			if (progress != -1) {
+
+				@SuppressWarnings("unused")
+				int pageNumber = spine.getPageNumberFor(getIndex(),
+						getPosition());
+
+				for (BookViewListener listener : this.listeners) {
 					listener.progressUpdate(progress);
-				}		
+				}
 			}
 		}
 	}
-	
+
 	public void setEnableScrolling(boolean enableScrolling) {
-		
-		if ( this.strategy == null || this.strategy.isScrolling() != enableScrolling ) {
+
+		if (this.strategy == null
+				|| this.strategy.isScrolling() != enableScrolling) {
 
 			int pos = -1;
 			boolean wasNull = true;
-			
+
 			Spanned text = null;
-			
-			if ( this.strategy != null ) {
+
+			if (this.strategy != null) {
 				pos = this.strategy.getPosition();
 				text = this.strategy.getText();
 				this.strategy.clearText();
 				wasNull = false;
-			}			
+			}
 
-			if ( enableScrolling ) {
+			if (enableScrolling) {
 				this.strategy = new ScrollingStrategy(this);
 			} else {
 				this.strategy = new SinglePageStrategy(this);
 			}
 
-			if ( ! wasNull ) {				
-				this.strategy.setPosition( pos );				 
+			if (!wasNull) {
+				this.strategy.setPosition(pos);
 			}
-			
-			if ( text != null && text.length() > 0 ) {
+
+			if (text != null && text.length() > 0) {
 				this.strategy.loadText(text);
 			}
 		}
 	}
-	
-	public void setBook( Book book ) {
-		
+
+	public void setBook(Book book) {
+
 		this.book = book;
-		this.spine = new PageTurnerSpine(book);	   
-	    this.spine.navigateByIndex( this.storedIndex );	    
+		this.spine = new PageTurnerSpine(book);
+		this.spine.navigateByIndex(this.storedIndex);
 	}
-	
-	private void initBook() throws IOException {	
-		
-		if ( this.fileName == null ) {
+
+	private void initBook() throws IOException {
+
+		if (this.fileName == null) {
 			throw new IOException("No file-name specified.");
 		}
-						
+
 		// read epub file
-        EpubReader epubReader = new EpubReader();	
-       
-        MediaType[] lazyTypes = {
-        		MediatypeService.CSS, //We don't support CSS yet 
-        		
-        		MediatypeService.GIF, MediatypeService.JPG,
-        		MediatypeService.PNG, MediatypeService.SVG, //Handled by the ResourceLoader
-        		
-        		MediatypeService.OPENTYPE, MediatypeService.TTF, //We don't support custom fonts either
-        		MediatypeService.XPGT,
-        };        	
-        
-       	Book newBook = epubReader.readEpubLazy(fileName, "UTF-8", Arrays.asList(lazyTypes));
-        setBook( newBook );
-	}	
-	
+		EpubReader epubReader = new EpubReader();
+
+		MediaType[] lazyTypes = {
+				MediatypeService.CSS, // We don't support CSS yet
+
+				MediatypeService.GIF, MediatypeService.JPG,
+				MediatypeService.PNG, MediatypeService.SVG, // Handled by the
+															// ResourceLoader
+
+				MediatypeService.OPENTYPE, MediatypeService.TTF, // We don't
+																	// support
+																	// custom
+																	// fonts
+																	// either
+				MediatypeService.XPGT, };
+
+		Book newBook = epubReader.readEpubLazy(fileName, "UTF-8",
+				Arrays.asList(lazyTypes));
+		Log.d("Reader", "the filename is" + fileName);
+		setBook(newBook);
+	}
+
+	public void navigateBySearchResult(SearchResult searchresult) {
+		// SearchResult searchResult = result;
+
+		this.prevPos = this.getPosition();
+		this.strategy.setPosition(searchresult.getStart());
+
+		this.prevIndex = this.getIndex();
+
+		this.storedIndex = searchresult.getIndex();
+		this.strategy.clearText();
+		this.spine.navigateByIndex(searchresult.getIndex());
+
+		LoadTextTask LTT = new LoadTextTask();
+		LTT.setResult(searchresult);
+		LTT.execute();
+	}
+
 	private class LoadTextTask extends AsyncTask<String, Integer, Spanned> {
-		
-		private String name;		
-		
+
+		private String name;
+
 		private boolean wasBookLoaded;
-		
+
 		private String error;
-		
+		private SearchResult searchresult;
+		private Boolean hasresult = false;
+
+		public void setResult(SearchResult hightListResults) {
+			// TODO Auto-generated constructor stub
+			this.searchresult = hightListResults;
+			hasresult = true;
+			}
+
 		@Override
 		protected void onPreExecute() {
 			this.wasBookLoaded = book != null;
 			parseEntryStart(getIndex());
 		}
-		
+
 		@Override
-		protected Spanned doInBackground(String...hrefs) {	
-			
-			if ( loader != null ) {
+		protected Spanned doInBackground(String... hrefs) {
+
+			if (loader != null) {
 				loader.clear();
 			}
-			
-			if ( BookView.this.book == null ) {
+
+			if (BookView.this.book == null) {
 				try {
 					initBook();
-				} catch (IOException io ) {
+				} catch (IOException io) {
 					this.error = io.getMessage();
 					return null;
 				}
-			}			
-									
-			this.name = spine.getCurrentTitle();	
-						
+			}
+
+			this.name = spine.getCurrentTitle();
+
 			Resource resource;
-			
-			if ( hrefs.length == 0 ) {
+
+			if (hrefs.length == 0) {
 				resource = spine.getCurrentResource();
 			} else {
 				resource = book.getResources().getByHref(hrefs[0]);
 			}
-			
-			if ( resource == null ) {
-				return new SpannedString("Sorry, it looks like you clicked a dead link.\nEven books have 404s these days." );
-			}			
-			
+
+			if (resource == null) {
+				return new SpannedString(
+						"Sorry, it looks like you clicked a dead link.\nEven books have 404s these days.");
+			}
+
 			try {
-				Spanned result = spanner.fromHtml(resource.getReader());
-				resource.getData();
-				loader.load(); //Load all image resources.
-				
-				int period=fileName.lastIndexOf(".");
-				String check=fileName.substring(period-4,period );
-				
-				if(check.equalsIgnoreCase("_ENC")){
-					ProcessData process=new ProcessData();
+				Spannable result = (Spannable) spanner.fromHtml(resource.getReader());
+
+					loader.load(); // Load all image resources.
 					
-				    try {
-					   result=spanner.fromHtml(process.decryption(resource.getData(),context));
-					} catch (DataLengthException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IllegalStateException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InvalidCipherTextException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
+				
+				// Highlight search results (if any)
+				if (hasresult) {
+					result.setSpan(new BackgroundColorSpan(Color.YELLOW),
+							searchresult.getStart(), searchresult.getEnd(),
+							Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
-				
-				
-				
+
 				return result;
-			} catch (IOException io ) {
-				return new SpannableString( "Could not load text: " + io.getMessage() );
-			}			
-	        
+			} catch (IOException io) {
+				return new SpannableString("Could not load text: "
+						+ io.getMessage());
+			}
+
 		}
-		
+
 		@Override
 		protected void onPostExecute(final Spanned result) {
-			
-			if ( ! wasBookLoaded ) {
-				if ( book != null ) {
-					bookOpened(book);		
+
+			if (!wasBookLoaded) {
+				if (book != null) {
+					bookOpened(book);
 				} else {
 					errorOnBookOpening(this.error);
 					return;
 				}
 			}
-			
+
 			restorePosition();
-			strategy.loadText( result );			
-			
+			strategy.loadText(result);
+
+			/**
+			 * This is a hack for scrolling not updating to the right position
+			 * on Android 4+
+			 */
+			/*
+			 * if ( strategy.isScrolling() ) { scrollHandler.postDelayed(new
+			 * Runnable() {
+			 * 
+			 * @Override public void run() { restorePosition(); } }, 100); }
+			 */
+
 			parseEntryComplete(spine.getPosition(), this.name);
 		}
-	}	
+	}
 }

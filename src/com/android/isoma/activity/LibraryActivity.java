@@ -45,13 +45,14 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.SearchRecentSuggestions;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -69,7 +70,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import com.android.isoma.IsomaActionActivity;
+
+import com.android.isoma.EpubSite;
 import com.android.isoma.R;
 import com.android.isoma.library.LibraryBook;
 import com.android.isoma.library.LibraryProvider;
@@ -123,7 +125,7 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
         // You can also assign the title programmatically by passing a
         // CharSequence or resource id.
         actionBar.setTitle(R.string.library_title);
-        actionBar.setHomeAction(new IntentAction(this, IsomaActionActivity.createIntent(this), R.drawable.ic_title_home_default));
+        actionBar.setHomeAction(new IntentAction(this, EpubSite.createIntent(this), R.drawable.ic_menu_ilib));
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.addAction(new SearchBookList());
         final Action settingsAction = new IntentAction(this, new Intent(this, PageTurnerPrefsActivity.class), R.drawable.ic_menu_settingis);
@@ -245,7 +247,9 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 				try {
 					startActivityForResult(intent, 1);
 				} catch (ActivityNotFoundException e) {
-					new ImportBooksTask().execute(new File("/sdcard"));  
+					
+					String sdCardRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
+					 new ImportBooksTask().execute(new File(sdCardRoot));
 				}
 				return true;
 			}
@@ -430,7 +434,7 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 				LOG.info("Importing: " + book.getAbsolutePath() );
 				try {
 					if ( ! libraryService.hasBook(book.getName() ) ) {
-						importBook( book.getAbsolutePath() );
+						importBook(book);
 					}					
 				} catch (OutOfMemoryError oom ) {
 					errors.add(book.getName() + ": Out of memory.");
@@ -471,16 +475,26 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 			}
 		}
 		
-		private void importBook(String file) {
+		private void importBook(File file) {
 			try {
+				
+				if ( libraryService.hasBook(file.getName() ) ) {
+					return;
+				}
+				String fileName = file.getAbsolutePath();
 				// read epub file
 		        EpubReader epubReader = new EpubReader();
-		        				
-				Book importedBook = epubReader.readEpubLazy(file, "UTF-8", 
-						Arrays.asList(MediatypeService.mediatypes));								
+		        
+		        Log.d("Isoma","This is the file we are trying to import on line 492 "+ file);
+		        
+		       // Log.INFO("This is the file we are trying to import "+ file);				
+				Book importedBook = epubReader.readEpubLazy(fileName, "UTF-8", 
+						Arrays.asList(MediatypeService.mediatypes));	
+				Log.d("Isoma","At line 500 the imported book to string is  "+ importedBook.toString());
+				
 				
 				boolean copy = settings.getBoolean("copy_to_library", true);
-	        	libraryService.storeBook(file, importedBook, false, copy);	        		        	
+	        	libraryService.storeBook(fileName, importedBook, false, copy);	        		        	
 				
 			} catch (Exception io ) {
 				errors.add( file + ": " + io.getMessage() );
@@ -586,8 +600,10 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 				builder.setPositiveButton(android.R.string.yes, new OnClickListener() {
 					
 					public void onClick(DialogInterface dialog, int which) {
-						dialog.dismiss();		
-						new ImportBooksTask().execute(new File("/sdcard"));
+						dialog.dismiss();	
+						
+						String sdCardRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
+						 new ImportBooksTask().execute(new File(sdCardRoot));
 					}
 				});
 				
@@ -602,6 +618,13 @@ public class LibraryActivity extends RoboActivity implements OnItemClickListener
 			}
 		}
 		
+	}
+
+
+	public static Intent createIntent(Context context) {
+		 Intent i = new Intent(context, LibraryActivity.class);
+	        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+	        return i;
 	}
 	
 	

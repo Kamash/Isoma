@@ -4,14 +4,50 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
     
+     
     <com.markupartist.android.widget.ActionBar
 	    android:id="@+id/search_actionbar"
 	     style="@style/ActionBar"
         />
+  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal" >
+    <ImageView    		
+    		android:src="@android:drawable/ic_menu_search"
+    		android:layout_width="wrap_content"
+    		android:layout_height="wrap_content"
+    		android:maxHeight="7dp"
+    		android:maxWidth="7dp"/>
+    		
+        <TextView android:id="@+id/searchTerm" 
+        android:text="" 
+        android:layout_width="match_parent" 
+        android:layout_height="wrap_content"
+        android:padding="6dp" 
+        android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+         <ImageView    		
+    		android:src="@android:drawable/divider_horizontal_dark"
+    		android:layout_width="fill_parent"
+    		android:layout_height="wrap_content"
+    		android:scaleType="fitXY"
+    		android:paddingLeft="5dp"
+    		android:paddingRight="5dp"
+    		android:paddingBottom="4dp"
+    		android:paddingTop="4dp"
+    		android:minHeight="7dp" />
+        
+    <LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+   
    <ListView
         android:id="@+id/searchList"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
     </ListView>
+     </LinearLayout>
 
 </LinearLayout>

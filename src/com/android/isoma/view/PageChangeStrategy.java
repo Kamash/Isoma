@@ -85,5 +85,7 @@ public interface PageChangeStrategy {
 	 * @return the text
 	 */
 	public Spanned getText();
+
+	public boolean isAtEnd();
 	
 }

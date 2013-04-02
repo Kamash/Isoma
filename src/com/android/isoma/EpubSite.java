@@ -1,21 +1,3 @@
-/*
- * Copyright (C) 2012 @ilabAfrica
- * 
- * This file is part of Isoma
- *
- * Isoma is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Isoma is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Isoma.  If not, see <http://www.gnu.org/licenses/>.*
- */
 package com.android.isoma;
 
 
@@ -31,20 +13,21 @@ import com.android.isoma.enc.sendPhoneData;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.view.Menu;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.view.Gravity;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.webkit.DownloadListener;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -59,48 +42,76 @@ public class EpubSite extends Activity{
 	static String noma;
 	File cacheDir;
 	ProgressDialog dialog;
-	 ProgressDialog progDialog=null;
+	ProgressDialog mProgressDialog,progDialog,loadingProgress=null;
+	public String url="";
 
    	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.epubview);
 	    mWebView = (WebView) findViewById(R.id.webview);
-	   
+	    mWebView.getSettings().setJavaScriptEnabled(true);
+	    mWebView.getSettings().setAppCacheEnabled(true);
+	    mWebView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+	    
+	    getResources();
+	    
+	    mProgressDialog = new ProgressDialog(this);
+	    mProgressDialog.setMessage("Downloading book");
+	    mProgressDialog.setIndeterminate(false);
+	    mProgressDialog.setMax(100);
+	    mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	    
+	    loadingProgress = new ProgressDialog(this);
+	    loadingProgress.setMessage("Loading..");
+	    loadingProgress.setIndeterminate(false);
+	    loadingProgress.setMax(100);
+	    loadingProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		
 	    mWebView.setDownloadListener(new DownloadListener() {
 	    	
 	        public void onDownloadStart(final String url, String userAgent,
 	                String contentDisposition, String mimetype,
 	                long contentLength) {
 	          
-	           dialog = ProgressDialog.show(EpubSite.this,
-	    				"Isoma", "Downloading book. Please wait....",
-	    				true);
-	    		new Thread() {
-	    			@Override
-	    			public void run() {
-	    			savefile(url);
-	    	  dialog.dismiss();
-	    			}
-			}.start();
-
-	        }
+	        	DownloadFilesTask downloadFile = new DownloadFilesTask();
+	        	downloadFile.execute(url);
+	    			
+	    		}
+	    
 	    });
    	}   
+   	
+   	public static Intent createIntent(Context context) {
+        Intent i = new Intent(context, EpubSite.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return i;
+    }
+   	
     @Override
 	public void onResume() {
         super.onResume();
         new LoadSite().execute();
     }
+    /**
+     * 
+     * @author admin
+     * Task to load the mobile website
+     *
+     */
     public class LoadSite extends AsyncTask<Void, Void, Boolean> {
     	
     	@Override
 		protected void onPreExecute() {
-    		progDialog=ProgressDialog.show(EpubSite.this,"Isoma website", "Opening page, please wait...",false,false);	
-    		 
-    		Toast toa=Toast.makeText(EpubSite.this, "Checking internet connection", Toast.LENGTH_SHORT); 
-    		toa.setGravity(Gravity.CENTER, 0, 0);
-    		toa.show(); 
+    		
+    		progDialog=ProgressDialog.show(EpubSite.this,"Isoma website", "Loading..",false,false,new DialogInterface.OnCancelListener(){
+                public void onCancel(DialogInterface dialog) {
+                    LoadSite.this.cancel(true);
+                    finish();
+                }
+            });	
+    
+ 		 
         }
     	
     	@Override
@@ -109,21 +120,45 @@ public class EpubSite extends Activity{
             // TODO Auto-generated method stub
             ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo netInfo = cm.getActiveNetworkInfo();
-             
+            
+              
             if (netInfo != null && netInfo.isConnectedOrConnecting()) {
         	    new Thread() {
         			@Override
         			public void run() {
-        		 mWebView.loadUrl("Url to your site");
-            	 mWebView.setWebViewClient(new HelloWebViewClient());
+        		
+        		url=getResources().getString(R.string.server_url);
+        		
+        		mWebView.loadUrl("http"+url);
+            	mWebView.setWebViewClient(new HelloWebViewClient());
+            	mWebView.setWebChromeClient(new WebChromeClient() {
+            		   @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+
+                super.onProgressChanged(view, newProgress);
+                loadingProgress.setProgress(newProgress);
+            		  
+            	// hide the progress bar if the loading is complete
+
+            	 if (newProgress == 100) {
+            		 loadingProgress.dismiss();	   
+            	 } else{
+            		 loadingProgress.show();
+            	 }
+
+             }});
+            	
+              	WebSettings ws=mWebView.getSettings();
+                ws.setJavaScriptEnabled(true);
                 sendPhoneData spd=new sendPhoneData(EpubSite.this,mWebView);
                 mWebView.addJavascriptInterface(spd, "Android");
+            	            
         			}
         	    }.start();
                 return true;           
             }
             return false;
-			//return null;
+			
         }  
     	@Override
 		protected void onPostExecute(Boolean result) {
@@ -138,14 +173,11 @@ public class EpubSite extends Activity{
          	      progDialog.dismiss();
          	   }
          	});
-        	
-            Toast toast=Toast.makeText(EpubSite.this, "Done loading", Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER, 0, 0);
-            toast.show();
-        
+        	  
             }
 
             if (result == false) {
+            	
             	Handler handler = new Handler();
             	handler.post(new Runnable(){
             	   public void run(){
@@ -156,98 +188,91 @@ public class EpubSite extends Activity{
             Toast toas=Toast.makeText(EpubSite.this, "Sorry. It seems there is a problem "+"\n"+"with your internet connection", Toast.LENGTH_LONG);
             toas.setGravity(Gravity.CENTER, 0, 0);
             toas.show();
-           }
+            
+            }
             return;
       }
         }
+    /**
+     * 
+     * @author admin
+     * Task to download book from the mobile website
+     *
+     */
     
+    private class DownloadFilesTask extends AsyncTask<String, Integer, String> {
+    	
+		@Override
+		protected String doInBackground(String... url) {
+			File rootDir = Environment.getExternalStorageDirectory();
+			//get the filename from the URL
+			    int  last = url[0].lastIndexOf("/");
+	   			String oldfilename=url[0].substring(last+1);
 
-    
+	   		//handle the spaces in the filename	
+	   		   String filename=oldfilename.replaceAll("%20"," ");
+	   			
+	        URL u;
+			try {
+				u = new URL(url[0]);
+			    
+	            HttpURLConnection c = (HttpURLConnection) u.openConnection();
+	            c.setRequestMethod("GET");
+	            c.setDoOutput(true);
+	            c.connect();
+	            int lengthOfFile = c.getContentLength();
+	           
+	         FileOutputStream fileoutput = new FileOutputStream(new File(rootDir, filename));
+	         
+	         InputStream in = c.getInputStream();
 
-   	private void savefile(String url1){
-   		File rootDir = Environment.getExternalStorageDirectory();
-   		
-		//get the filename from the URL
-		    int  last = url1.lastIndexOf("/");
-   			String oldfilename=url1.substring(last+1);
+	         byte[] buffer = new byte[1024];
+	         int bufferLength=0;
+	         int downloadedSize=0;
+	        
+	         while ( (bufferLength = in.read(buffer)) > 0 ) {  
+	        	 
+	             fileoutput.write(buffer, 0, bufferLength);  
+	             downloadedSize += bufferLength;  
+	             publishProgress((int) (downloadedSize * 100 / lengthOfFile));
+	         } 
+	         
+	         fileoutput.close();
+	         
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		@Override
+	    protected void onPreExecute() {
+	        super.onPreExecute();
+	        mProgressDialog.show();
+	    }
 
-   		//handle the spaces in the filename	
-   		   String filename=oldfilename.replaceAll("%20"," ");  			
-        URL u;
-		try {
-			u = new URL(url1);
-		
-            HttpURLConnection c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("GET");
-            c.setDoOutput(true);
-            c.connect();
-           
-         FileOutputStream fileoutput = new FileOutputStream(new File(rootDir, filename));
-         
-         InputStream in = c.getInputStream();
+	    @Override
+	    protected void onProgressUpdate(Integer... progress) {
+	        super.onProgressUpdate(progress);
+	        mProgressDialog.setProgress(progress[0]);
+	    }
+	    @Override
+		protected void onPostExecute(String result) {
+	    	super.onPostExecute(result);
+	    	mProgressDialog.dismiss();
+	    }   
+    	
+    }
 
-         byte[] buffer = new byte[1024];
-         int bufferLength=0;
-         int downloadedSize=0;
-         while ( (bufferLength = in.read(buffer)) > 0 ) {  
-             fileoutput.write(buffer, 0, bufferLength);  
-             downloadedSize += bufferLength;  
-         } 
-         
-         fileoutput.close();
-         
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
-   	}
    
 	private class HelloWebViewClient extends WebViewClient {
 	    @Override
 	    public boolean shouldOverrideUrlLoading(WebView view, String url) {
 	        view.loadUrl(url);
-        
             return true;
-	    }
-	    
+	    }   
 	}
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.viewer_menu, menu);
-        return true;
-	}
-	  @Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-	        switch (item.getItemId()) {
-	            // For "Title only": Examples of matching an ID with one assigned in
-	            //                   the XML
-	            case R.id.ViewerHelp:
-	                Toast.makeText(this, "Oops, file was not loaded!", Toast.LENGTH_SHORT).show();
-	                return true;
-	            case R.id.ReadYes:
-	            	Toast.makeText(this, "See you!", Toast.LENGTH_SHORT).show();
-	            	finish();
-	                return true;
-	            case R.id.ReadNo:
-	                Toast.makeText(this, "Phew!", Toast.LENGTH_SHORT).show();
-	                return true;
-	                
-	            // Generic catch all for all the other menu resources
-	            default:
-	                // Don't toast text when a submenu is clicked
-	                if (!item.hasSubMenu()) {
-	                    Toast.makeText(this, item.getTitle(), Toast.LENGTH_SHORT).show();
-	                    return true;
-	                }
-	                break;
-	        }
-	        return false;
-	    }
 	
-
     }
 
