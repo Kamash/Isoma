@@ -55,6 +55,7 @@ import android.text.SpannedString;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.ContextThemeWrapper;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -1197,7 +1198,9 @@ public class ReadingActivity extends RoboActivity implements BookViewListener {
 			items[i] = tocList.get(i).getTitle();
 		}
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		// Enables us to set the font size of the table of content items
+		ContextThemeWrapper cw = new ContextThemeWrapper( this, R.style.AlertDialogTheme );
+		AlertDialog.Builder builder = new AlertDialog.Builder(cw);
 		builder.setTitle(R.string.toc_label);
 
 		builder.setItems(items, new DialogInterface.OnClickListener() {

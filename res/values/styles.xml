@@ -107,6 +107,12 @@
         <item name="android:textColor">@android:color/secondary_text_light</item>
     </style>
     
+    <style name="AlertDialogTheme" parent="android:Theme.Dialog">
+    <item name="android:textSize">14sp</item>
+     <item name="android:paddingTop">2dip</item>
+     <item name="android:paddingBottom">2dip</item>
+    </style>
+    
      <style name="LibView">
         <item name="android:textSize">15sp</item>
         <item name="android:lineSpacingMultiplier">1.1</item>
