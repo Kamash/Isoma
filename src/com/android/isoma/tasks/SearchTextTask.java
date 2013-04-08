@@ -7,8 +7,11 @@ import java.util.regex.Pattern;
 
 import nl.siegmann.epublib.domain.Book;
 
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.htmlcleaner.TagNode;
 
+import com.android.isoma.enc.ProcessData;
 import com.android.isoma.epub.PageTurnerSpine;
 import com.android.isoma.view.BookView;
 import com.isoma.htmlspanner.HtmlSpanner;
@@ -84,22 +87,41 @@ public class SearchTextTask
 					publishProgress(new SearchResult(null, index, 0, 0,
 							progress));
 
-					Spannable spanned = (Spannable) spanner.fromHtml(spine
-								.getCurrentResource().getReader());
+						Spannable spaned = null;
 					
+					
+					int period = fileName.lastIndexOf(".");
+					String check = fileName.substring(period - 4, period);
+
+					if (check.equalsIgnoreCase("_ENC")) {
+						ProcessData process = new ProcessData();
+
+						try {
+							spaned = (Spannable) spanner.fromHtml(process.decryption(spine.getCurrentResource().getData(), context));
+						} catch (DataLengthException e) {
+							e.printStackTrace();
+						} catch (IllegalStateException e) {
+							e.printStackTrace();
+						} catch (InvalidCipherTextException e) {
+							e.printStackTrace();
+						}
+
+					}else{
+						spaned = (Spannable) spanner.fromHtml(spine.getCurrentResource().getReader());
+					}
 				
-					Matcher matcher = pattern.matcher(spanned);
+					Matcher matcher = pattern.matcher(spaned);
 					
 					if ((matcher.find(lastEndPoint) == true)) {
 						int from = Math.max(0, matcher.start());
-						int to = Math.min(spanned.length() - 1,
+						int to = Math.min(spaned.length() - 1,
 								matcher.end());
 						
 						if (isCancelled()) {
 							return null;
 						}
 					
-						String text = spanned.subSequence(from, to).toString().trim();
+						String text = spaned.subSequence(from, to).toString().trim();
 						
 							res = new SearchResult(text, index,
 									matcher.start(), matcher.end(),

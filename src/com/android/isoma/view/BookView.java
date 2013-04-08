@@ -39,6 +39,8 @@ import nl.siegmann.epublib.epub.EpubReader;
 import nl.siegmann.epublib.service.MediatypeService;
 import nl.siegmann.epublib.util.StringUtil;
 
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.htmlcleaner.TagNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -71,6 +74,7 @@ import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.android.isoma.enc.ProcessData;
 import com.android.isoma.epub.PageTurnerSpine;
 import com.android.isoma.epub.ResourceLoader;
 import com.android.isoma.epub.ResourceLoader.ResourceCallback;
@@ -95,6 +99,7 @@ public class BookView extends ScrollView {
 
 	private PageTurnerSpine spine;
 
+	private Handler scrollHandler;
 
 	private String fileName;
 	private Book book;
@@ -113,7 +118,6 @@ public class BookView extends ScrollView {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BookView.class);
 
-	@SuppressWarnings("unused")
 	private Context context;
 
 	public BookView(Context context, AttributeSet attributes) {
@@ -786,27 +790,6 @@ public class BookView extends ScrollView {
 		}
 	}
 
-	/*
-	 * private void progressUpdate() {
-	 * 
-	 * if ( this.spine != null ) { int progress =
-	 * spine.getProgressPercentage(this.getPosition() );
-	 * 
-	 * if ( progress != -1 ) { for ( BookViewListener listener: this.listeners )
-	 * { listener.progressUpdate(progress); } } } if (this.spine != null &&
-	 * this.strategy.getText() != null && this.strategy.getText().length() > 0)
-	 * {
-	 * 
-	 * double progressInPart = (double) this.getPosition() / (double)
-	 * this.strategy.getText().length();
-	 * 
-	 * if (strategy.getText().length() > 0) { progressInPart = 1d; }
-	 * 
-	 * int progress = spine.getProgressPercentage(progressInPart);
-	 * 
-	 * if ( progress != -1 ) { for ( BookViewListener listener: this.listeners )
-	 * { listener.progressUpdate(progress); } } } }
-	 */
 	private void progressUpdate() {
 
 		if (this.spine != null && this.strategy.getText() != null
@@ -823,7 +806,6 @@ public class BookView extends ScrollView {
 
 			if (progress != -1) {
 
-				@SuppressWarnings("unused")
 				int pageNumber = spine.getPageNumberFor(getIndex(),
 						getPosition());
 
@@ -934,7 +916,7 @@ public class BookView extends ScrollView {
 			// TODO Auto-generated constructor stub
 			this.searchresult = hightListResults;
 			hasresult = true;
-			}
+		}
 
 		@Override
 		protected void onPreExecute() {
@@ -974,14 +956,40 @@ public class BookView extends ScrollView {
 			}
 
 			try {
-				Spannable result = (Spannable) spanner.fromHtml(resource.getReader());
+				Spanned result = null;
+				
+
+				int period = fileName.lastIndexOf(".");
+				String check = fileName.substring(period - 4, period);
+
+				if (check.equalsIgnoreCase("_ENC")) {
+					ProcessData process = new ProcessData();
+
+					Spanned content;
+
+					try {
+						result = (Spannable) spanner.fromHtml(process.decryption(
+								resource.getData(), context));
+					} catch (DataLengthException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IllegalStateException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InvalidCipherTextException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}else{
+					result = spanner.fromHtml(resource.getReader());
 
 					loader.load(); // Load all image resources.
 					
-				
+				}
 				// Highlight search results (if any)
 				if (hasresult) {
-					result.setSpan(new BackgroundColorSpan(Color.YELLOW),
+					((Spannable) result).setSpan(new BackgroundColorSpan(Color.YELLOW),
 							searchresult.getStart(), searchresult.getEnd(),
 							Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
